@@ -5,12 +5,12 @@ using Shooter.Components;
 
 namespace Shooter.Systems;
 
-public sealed class MovementSystem : SystemBase<GameTime>
+public sealed class AutoMovementSystem : SystemBase<GameTime>
 {
     private readonly QueryDescription _entitiesToMove = new QueryDescription().WithAll<Position, Velocity>().WithNone<Input>();
     private readonly Rectangle _viewport;
 
-    public MovementSystem(World world, Rectangle viewport) : base(world)
+    public AutoMovementSystem(World world, Rectangle viewport) : base(world)
     {
         _viewport = viewport;
     }

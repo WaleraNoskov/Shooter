@@ -1,3 +1,8 @@
-﻿namespace Shooter.Components;
+﻿using Microsoft.Xna.Framework;
 
-public record Position();
+namespace Shooter.Components;
+
+public struct Position
+{
+    public Vector2 Vector;
+}

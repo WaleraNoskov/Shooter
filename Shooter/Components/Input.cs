@@ -1,6 +1,8 @@
 ﻿namespace Shooter.Components;
 
-public class Input
+public struct Input
 {
-    
+    public float X;
+    public float Y;
+    public int PlayerIndex;
 }

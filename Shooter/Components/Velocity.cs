@@ -1,3 +1,8 @@
-﻿namespace Shooter.Components;
+﻿using Microsoft.Xna.Framework;
 
-public record Velocity();
+namespace Shooter.Components;
+
+public struct Velocity
+{
+    public Vector2 Vector;
+}
