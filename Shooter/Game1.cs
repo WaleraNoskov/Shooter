@@ -24,8 +24,8 @@ public class Game1 : Game
 
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
-    private Texture2D _texture;
-    private Texture2D _mainChTexture;
+    private Texture2D _ballTexture;
+    private Texture2D _playerTexture;
 
     public Game1()
     {
@@ -37,18 +37,18 @@ public class Game1 : Game
     protected override void Initialize()
     {
         _random = new Random();
-        _texture = new Texture2D(GraphicsDevice, 10, 10);
-        _mainChTexture = new Texture2D(GraphicsDevice, 64, 64);
+        _ballTexture = new Texture2D(GraphicsDevice, 16, 16);
+        _playerTexture = new Texture2D(GraphicsDevice, 32, 256);
 
-        var data = new Color[10 * 10];
+        var data = new Color[16 * 16];
         for (var i = 0; i < data.Length; ++i)
             data[i] = Color.White;
-        _texture.SetData(data);
+        _ballTexture.SetData(data);
 
-        data = new Color[64 * 64];
+        data = new Color[32 * 256];
         for (var i = 0; i < data.Length; ++i)
-            data[i] = Color.White;
-        _mainChTexture.SetData(data);
+            data[i] = Color.Black;
+        _playerTexture.SetData(data);
 
         base.Initialize();
     }
@@ -79,26 +79,23 @@ public class Game1 : Game
         _colorSystem = new ColorSystem(_world);
         _drawSystem = new DrawSystem(_world, _spriteBatch);
 
-        for (var index = 0; index < 3; index++)
-        {
-            _world.Create(
-                new Position { Vector = _random.NextVector2(GraphicsDevice.Viewport.Bounds) },
-                new Velocity { Vector = _random.NextVector2(-0.25f, 0.25f) },
-                new Sprite { Texture = _texture, Color = _random.NextColor() }
-            );
-        }
+        _world.Create(
+            new Position { Vector = new Vector2(_graphics.PreferredBackBufferWidth / 2f, _graphics.PreferredBackBufferHeight / 2f) },
+            new Velocity { Vector = _random.NextVector2(-0.25f, 0.25f) },
+            new Sprite { Texture = _ballTexture, Color = _random.NextColor() }
+        );
 
         _world.Create(
             new Input() { PlayerIndex = 1 },
-            new Position { Vector = _random.NextVector2(GraphicsDevice.Viewport.Bounds) },
+            new Position { Vector = new Vector2(_graphics.PreferredBackBufferWidth - 128, _graphics.PreferredBackBufferHeight / 2f - 128) },
             new Velocity { Vector = new Vector2(0.25f, 0.25f) },
-            new Sprite { Texture = _mainChTexture, Color = _random.NextColor() }
+            new Sprite { Texture = _playerTexture, Color = Color.Black }
         );
         _world.Create(
             new Input() { PlayerIndex = 2 },
-            new Position { Vector = _random.NextVector2(GraphicsDevice.Viewport.Bounds) },
+            new Position { Vector = new Vector2(128, _graphics.PreferredBackBufferHeight / 2f - 128) },
             new Velocity { Vector = new Vector2(0.25f, 0.25f) },
-            new Sprite { Texture = _texture, Color = _random.NextColor() }
+            new Sprite { Texture = _playerTexture, Color = Color.Black }
         );
     }
 
@@ -108,59 +105,59 @@ public class Game1 : Game
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
 
-        // Add a random amount of new entities
-        if (Keyboard.GetState().IsKeyDown(Keys.K))
-        {
-            // Bulk create entities
-            const int amount = 3;
-            Span<Entity> entities = stackalloc Entity[amount];
-            _world.Create(entities, [typeof(Position), typeof(Velocity), typeof(Sprite)], amount);
-
-            // Set variables
-            foreach (var entity in entities)
-            {
-#if DEBUG_PUREECS || RELEASE_PUREECS
-                _world.Set(entity,
-                    new Position { Vector = _random.NextVector2(GraphicsDevice.Viewport.Bounds) },
-                    new Velocity { Vector = _random.NextVector2(-0.25f, 0.25f) },
-                    new Sprite { Texture2D = _texture2D, Color = _random.NextColor() }
-                );
-#else
-                entity.Set(
-                    new Position { Vector = _random.NextVector2(GraphicsDevice.Viewport.Bounds) },
-                    new Velocity { Vector = _random.NextVector2(-0.25f, 0.25f) },
-                    new Sprite { Texture = _texture, Color = _random.NextColor() }
-                );
-#endif
-            }
-        }
-
-        // Remove a random amount of new entities
-        if (Keyboard.GetState().IsKeyDown(Keys.L))
-        {
-            // Find all entities
-            var entities = new Entity[_world.Size];
-            _world.GetEntities(new QueryDescription().WithNone<Input>(), entities.AsSpan());
-
-            // Delete random entities
-            var amount = Math.Min(3, entities.Length);
-            for (var index = 0; index < amount; index++)
-            {
-                var randomIndex = _random.Next(0, entities.Length);
-                var randomEntity = entities[randomIndex];
-
-#if DEBUG_PUREECS || RELEASE_PUREECS
-                if (_world.IsAlive(randomEntity))
-#else
-                if (randomEntity.IsAlive())
-#endif
-                {
-                    _world.Destroy(randomEntity);
-                }
-
-                entities[randomIndex] = Entity.Null;
-            }
-        }
+//         // Add a random amount of new entities
+//         if (Keyboard.GetState().IsKeyDown(Keys.K))
+//         {
+//             // Bulk create entities
+//             const int amount = 3;
+//             Span<Entity> entities = stackalloc Entity[amount];
+//             _world.Create(entities, [typeof(Position), typeof(Velocity), typeof(Sprite)], amount);
+//
+//             // Set variables
+//             foreach (var entity in entities)
+//             {
+// #if DEBUG_PUREECS || RELEASE_PUREECS
+//                 _world.Set(entity,
+//                     new Position { Vector = _random.NextVector2(GraphicsDevice.Viewport.Bounds) },
+//                     new Velocity { Vector = _random.NextVector2(-0.25f, 0.25f) },
+//                     new Sprite { Texture2D = _texture2D, Color = _random.NextColor() }
+//                 );
+// #else
+//                 entity.Set(
+//                     new Position { Vector = _random.NextVector2(GraphicsDevice.Viewport.Bounds) },
+//                     new Velocity { Vector = _random.NextVector2(-0.25f, 0.25f) },
+//                     new Sprite { Texture = _ballTexture, Color = _random.NextColor() }
+//                 );
+// #endif
+//             }
+//         }
+//
+//         // Remove a random amount of new entities
+//         if (Keyboard.GetState().IsKeyDown(Keys.L))
+//         {
+//             // Find all entities
+//             var entities = new Entity[_world.Size];
+//             _world.GetEntities(new QueryDescription().WithNone<Input>(), entities.AsSpan());
+//
+//             // Delete random entities
+//             var amount = Math.Min(3, entities.Length);
+//             for (var index = 0; index < amount; index++)
+//             {
+//                 var randomIndex = _random.Next(0, entities.Length);
+//                 var randomEntity = entities[randomIndex];
+//
+// #if DEBUG_PUREECS || RELEASE_PUREECS
+//                 if (_world.IsAlive(randomEntity))
+// #else
+//                 if (randomEntity.IsAlive())
+// #endif
+//                 {
+//                     _world.Destroy(randomEntity);
+//                 }
+//
+//                 entities[randomIndex] = Entity.Null;
+//             }
+//         }
 
         _inputSystem.Update(gameTime);
         _autoMovementSystem.Update(in gameTime);

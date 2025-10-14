@@ -30,7 +30,7 @@ public class ManualMovementSystem : SystemBase<GameTime>
 
         public void Update(ref Input input, ref Position position, ref Velocity velocity)
         {
-            position.Vector += new Vector2(input.X, -input.Y) * _deltaTime * velocity.Vector;
+            position.Vector += new Vector2(0, -input.Y) * _deltaTime * velocity.Vector;
         }
     }
 }
