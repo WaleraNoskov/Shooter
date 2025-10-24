@@ -8,7 +8,6 @@ namespace Shooter.Systems;
 public class InputSystem : SystemBase<GameTime>
 {
     private readonly QueryDescription _entitiesToSetInput = new QueryDescription().WithAll<Input>();
-    private readonly Rectangle _viewport;
 
     public InputSystem(World world) : base(world)
     {

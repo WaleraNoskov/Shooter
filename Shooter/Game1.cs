@@ -17,8 +17,9 @@ public class Game1 : Game
     private Random _random;
 
     private InputSystem _inputSystem;
-    private AutoMovementSystem _autoMovementSystem;
-    private ManualMovementSystem _manualMovementSystem;
+    private UserControlSystem _userControlSystem;
+    private MovementSystem _movementSystem;
+    private CollisionSystem _collisionSystem;
     private ColorSystem _colorSystem;
     private DrawSystem _drawSystem;
 
@@ -65,7 +66,7 @@ public class Game1 : Game
         base.BeginRun();
 
         _world = World.Create();
-        _jobScheduler = new(new JobScheduler.Config()
+        _jobScheduler = new(new JobScheduler.Config
         {
             ThreadCount = 0,
             MaxExpectedConcurrentJobs = 64,
@@ -74,27 +75,31 @@ public class Game1 : Game
         World.SharedJobScheduler = _jobScheduler;
 
         _inputSystem = new InputSystem(_world);
-        _autoMovementSystem = new AutoMovementSystem(_world, GraphicsDevice.Viewport.Bounds);
-        _manualMovementSystem = new ManualMovementSystem(_world);
+        _userControlSystem = new UserControlSystem(_world);
+        _collisionSystem = new CollisionSystem(_world);
+        _movementSystem = new MovementSystem(_world);
         _colorSystem = new ColorSystem(_world);
         _drawSystem = new DrawSystem(_world, _spriteBatch);
 
         _world.Create(
             new Position { Vector = new Vector2(_graphics.PreferredBackBufferWidth / 2f, _graphics.PreferredBackBufferHeight / 2f) },
-            new Velocity { Vector = _random.NextVector2(-0.25f, 0.25f) },
+            new Rigidbody { Velocity = new Vector2(0.5f, 0.05f), MaxVelocity = new Vector2(0.25f, 0.25f), BouncingFactor = 1},
+            new Collider {X1 = -8, Y1 = -8, X2 = 8,  Y2 = 8},
             new Sprite { Texture = _ballTexture, Color = _random.NextColor() }
         );
 
         _world.Create(
-            new Input() { PlayerIndex = 1 },
+            new Input { PlayerIndex = 1 },
             new Position { Vector = new Vector2(_graphics.PreferredBackBufferWidth - 128, _graphics.PreferredBackBufferHeight / 2f - 128) },
-            new Velocity { Vector = new Vector2(0.25f, 0.25f) },
+            new Rigidbody { Velocity = new Vector2(0, 0), MaxVelocity = new Vector2(0.25f, 0.25f), BouncingFactor = 0},
+            new Collider {X1 = -16, Y1 = -128, X2 = 16,  Y2 = 128},
             new Sprite { Texture = _playerTexture, Color = Color.Black }
         );
         _world.Create(
-            new Input() { PlayerIndex = 2 },
+            new Input { PlayerIndex = 2 },
             new Position { Vector = new Vector2(128, _graphics.PreferredBackBufferHeight / 2f - 128) },
-            new Velocity { Vector = new Vector2(0.25f, 0.25f) },
+            new Rigidbody { Velocity = new Vector2(0, 0), MaxVelocity = new Vector2(0.25f, 0.25f),  BouncingFactor = 0},
+            new Collider {X1 = -16, Y1 = -128, X2 = 16,  Y2 = 128},
             new Sprite { Texture = _playerTexture, Color = Color.Black }
         );
     }
@@ -105,64 +110,10 @@ public class Game1 : Game
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
 
-//         // Add a random amount of new entities
-//         if (Keyboard.GetState().IsKeyDown(Keys.K))
-//         {
-//             // Bulk create entities
-//             const int amount = 3;
-//             Span<Entity> entities = stackalloc Entity[amount];
-//             _world.Create(entities, [typeof(Position), typeof(Velocity), typeof(Sprite)], amount);
-//
-//             // Set variables
-//             foreach (var entity in entities)
-//             {
-// #if DEBUG_PUREECS || RELEASE_PUREECS
-//                 _world.Set(entity,
-//                     new Position { Vector = _random.NextVector2(GraphicsDevice.Viewport.Bounds) },
-//                     new Velocity { Vector = _random.NextVector2(-0.25f, 0.25f) },
-//                     new Sprite { Texture2D = _texture2D, Color = _random.NextColor() }
-//                 );
-// #else
-//                 entity.Set(
-//                     new Position { Vector = _random.NextVector2(GraphicsDevice.Viewport.Bounds) },
-//                     new Velocity { Vector = _random.NextVector2(-0.25f, 0.25f) },
-//                     new Sprite { Texture = _ballTexture, Color = _random.NextColor() }
-//                 );
-// #endif
-//             }
-//         }
-//
-//         // Remove a random amount of new entities
-//         if (Keyboard.GetState().IsKeyDown(Keys.L))
-//         {
-//             // Find all entities
-//             var entities = new Entity[_world.Size];
-//             _world.GetEntities(new QueryDescription().WithNone<Input>(), entities.AsSpan());
-//
-//             // Delete random entities
-//             var amount = Math.Min(3, entities.Length);
-//             for (var index = 0; index < amount; index++)
-//             {
-//                 var randomIndex = _random.Next(0, entities.Length);
-//                 var randomEntity = entities[randomIndex];
-//
-// #if DEBUG_PUREECS || RELEASE_PUREECS
-//                 if (_world.IsAlive(randomEntity))
-// #else
-//                 if (randomEntity.IsAlive())
-// #endif
-//                 {
-//                     _world.Destroy(randomEntity);
-//                 }
-//
-//                 entities[randomIndex] = Entity.Null;
-//             }
-//         }
-
         _inputSystem.Update(gameTime);
-        _autoMovementSystem.Update(in gameTime);
-        _manualMovementSystem.Update(gameTime);
-        _colorSystem.Update(in gameTime);
+        _userControlSystem.Update(gameTime);
+        _collisionSystem.Update(gameTime);
+        _movementSystem.Update(gameTime);
 
         base.Update(gameTime);
     }
@@ -170,6 +121,7 @@ public class Game1 : Game
     protected override void Draw(GameTime gameTime)
     {
         _graphics.GraphicsDevice.Clear(Color.White);
+        _colorSystem.Update(in gameTime);
         _drawSystem.Update(in gameTime);
 
         base.Draw(gameTime);
