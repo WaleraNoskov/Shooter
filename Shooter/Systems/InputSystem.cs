@@ -13,9 +13,9 @@ public class InputSystem : SystemBase<GameTime>
     {
     }
 
-    public override void Update(in GameTime time)
+    public override void Update(in GameTime gameTime)
     {
-        var settingInput = new SetInput((float)time.ElapsedGameTime.TotalMilliseconds);
+        var settingInput = new SetInput((float)gameTime.ElapsedGameTime.TotalMilliseconds);
         World.InlineParallelQuery<SetInput, Input>(in _entitiesToSetInput, ref settingInput);
     }
 
@@ -32,7 +32,7 @@ public class InputSystem : SystemBase<GameTime>
         {
             if (input.PlayerIndex == 1)
             {
-                int x = 0, y = 0;
+                int x, y;
 
                 if (Keyboard.GetState().IsKeyDown(Keys.Up))
                     y = 1;

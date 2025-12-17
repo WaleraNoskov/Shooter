@@ -11,5 +11,5 @@ public abstract class SystemBase<T>
     
     public World World { get; private set; }
 
-    public abstract void Update(in T state);
+    public abstract void Update(in T gameTime);
 }

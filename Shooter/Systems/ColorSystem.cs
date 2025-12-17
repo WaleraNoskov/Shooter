@@ -17,9 +17,9 @@ public class ColorSystem : SystemBase<GameTime>
         _random = new Random();
     }
     
-    public override void Update(in GameTime time)
+    public override void Update(in GameTime gameTime)
     {
-        _gameTime = time;
+        _gameTime = gameTime;
 
         // Modifies the color of all entities fitting the entitiesToChangeColor query.
         World.Query(in _entitiesToChangeColor, (ref Sprite sprite) =>

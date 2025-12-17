@@ -15,7 +15,7 @@ public class DrawSystem : SystemBase<GameTime>
         _batch = batch;
     }
 
-    public override void Update(in GameTime state)
+    public override void Update(in GameTime gameTime)
     {
         _batch.Begin();
         var query = World.Query(in _entitiesToDraw);
@@ -25,12 +25,28 @@ public class DrawSystem : SystemBase<GameTime>
 
             foreach (var index in chunk)
             {
-                ref var position = ref positions[index];
                 ref var sprite = ref sprites[index];
-                _batch.Draw(sprite.Texture, position.Vector, sprite.Color);
+                ref var position = ref positions[index];
+
+                var origin = new Vector2(
+                    sprite.Texture.Width / 2f,
+                    sprite.Texture.Height / 2f
+                );
+
+                _batch.Draw(
+                    sprite.Texture,
+                    position.Vector * 10f,
+                    null,
+                    sprite.Color,
+                    position.Angle,
+                    origin,
+                    Vector2.One,
+                    SpriteEffects.None,
+                    0f
+                );
             }
         }
-        
+
         _batch.End();
     }
 }

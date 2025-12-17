@@ -4,34 +4,21 @@ using Shooter.Components;
 
 namespace Shooter.Systems;
 
-public class MovementSystem : SystemBase<GameTime>
+public class MovementSystem(World world) : SystemBase<GameTime>(world)
 {
-    private readonly QueryDescription _entitiesToMove = new QueryDescription().WithAll<Position, Rigidbody>();
-    private readonly Rectangle _viewport;
-    
-    public MovementSystem(World world) : base(world)
-    {
-        
-    }
+    private readonly QueryDescription _entitiesToMove = new QueryDescription().WithAll<Input>();
 
-    public override void Update(in GameTime time)
+    public override void Update(in GameTime gameTime)
     {
-        var movement = new Move((float)time.ElapsedGameTime.TotalMilliseconds);
-        World.InlineParallelQuery<Move, Position, Rigidbody>(in _entitiesToMove, ref movement);
+        var moving = new Move((float)gameTime.ElapsedGameTime.TotalMilliseconds);
+        World.InlineParallelQuery<Move, Input>(in _entitiesToMove, ref moving);
     }
     
-    private readonly struct Move : IForEach<Position, Rigidbody>
+    private readonly struct Move(float deltaTime) : IForEach<Input>
     {
-        private readonly float _deltaTime;
-
-        public Move(float deltaTime)
+        public void Update(ref Input input)
         {
-            _deltaTime = deltaTime;
-        }
-
-        public void Update(ref Position position, ref Rigidbody rigidbody)
-        {
-            position.Vector += _deltaTime * rigidbody.Velocity;
+            
         }
     }
 }
