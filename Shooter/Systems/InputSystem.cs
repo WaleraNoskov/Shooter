@@ -35,9 +35,9 @@ public class InputSystem : SystemBase<GameTime>
                 int x, y;
 
                 if (Keyboard.GetState().IsKeyDown(Keys.Up))
-                    y = 1;
-                else if (Keyboard.GetState().IsKeyDown(Keys.Down))
                     y = -1;
+                else if (Keyboard.GetState().IsKeyDown(Keys.Down))
+                    y = 1;
                 else
                     y = 0;
 
@@ -56,9 +56,9 @@ public class InputSystem : SystemBase<GameTime>
                 int x = 0, y = 0;
 
                 if (Keyboard.GetState().IsKeyDown(Keys.W))
-                    y = 1;
-                else if (Keyboard.GetState().IsKeyDown(Keys.S))
                     y = -1;
+                else if (Keyboard.GetState().IsKeyDown(Keys.S))
+                    y = 1;
                 else
                     y = 0;
 

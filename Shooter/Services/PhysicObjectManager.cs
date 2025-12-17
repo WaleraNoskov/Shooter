@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Arch.Core;
 using Shooter.Contracts;
 
-namespace Shooter.Managers;
+namespace Shooter.Services;
 
 public class PhysicObjectManager
 {
@@ -26,6 +25,8 @@ public class PhysicObjectManager
             : [];
     }
 
+    public EntityPhysicsObjects? Get(Entity entity) => _entities.GetValueOrDefault(entity);
+    
     public T GetByTag<T>(Entity entity, PhysicObjectTypes type, string tag) where T : class
     {
         if (_entities.TryGetValue(entity, out var ep))
