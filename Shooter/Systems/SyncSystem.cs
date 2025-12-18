@@ -24,7 +24,7 @@ public class SyncSystem(World world, PhysicObjectManager physicObjectManager) : 
 
         public void Update(Entity entity, ref Position position)
         {
-            var entityObjects = physicObjectManager.Get(entity);
+            var entityObjects = physicObjectManager.GetObject(entity);
             var objects = entityObjects?.GetAll<Body>(PhysicObjectTypes.PhysicsBody);
             if (objects is null || objects.Count == 0)
                 return;

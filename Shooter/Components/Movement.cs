@@ -8,5 +8,4 @@ public struct Movement
     public MovementTypes Type;
     public float TargetVelocity;
     public float TargetForce;
-    public float CurrentVelocity;
 }

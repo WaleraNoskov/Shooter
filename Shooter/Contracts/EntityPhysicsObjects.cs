@@ -9,7 +9,7 @@ public class EntityPhysicsObjects
     private readonly Dictionary<PhysicObjectTypes, List<PhysicsObjectEntry>> _objects = new();
 
     // Добавить объект с опциональным тегом
-    public void Add(PhysicObjectTypes type, object obj, string tag = null)
+    public void Add(PhysicObjectTypes type, object obj, string? tag = null)
     {
         if (!_objects.TryGetValue(type, out var list))
         {
@@ -23,13 +23,15 @@ public class EntityPhysicsObjects
     // Получить все объекты типа
     public IReadOnlyList<T> GetAll<T>(PhysicObjectTypes type) where T : class
     {
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
         return _objects.TryGetValue(type, out var list)
             ? list.Select(x => x.Object as T).Where(x => x != null).ToList()
             : [];
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
     }
 
     // Получить объект по тегу
-    public T GetByTag<T>(PhysicObjectTypes type, string tag) where T : class
+    public T? GetByTag<T>(PhysicObjectTypes type, string tag) where T : class
     {
         if (!_objects.TryGetValue(type, out var list)) 
             return null;
@@ -43,7 +45,7 @@ public class EntityPhysicsObjects
 
     public bool Has(PhysicObjectTypes type) => _objects.ContainsKey(type);
 
-    public void Remove(PhysicObjectTypes type, string tag = null)
+    public void Remove(PhysicObjectTypes type, string? tag = null)
     {
         if (!_objects.TryGetValue(type, out var list)) return;
 

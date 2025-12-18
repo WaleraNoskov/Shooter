@@ -6,9 +6,11 @@ using nkast.Aether.Physics2D.Dynamics.Joints;
 using Schedulers;
 using Shooter.Components;
 using Shooter.Contracts;
+using Shooter.EventComponents;
 using Shooter.Services;
 using Shooter.Services.MovementHandlers;
 using Shooter.Systems;
+using Game = Microsoft.Xna.Framework.Game;
 using World = Arch.Core.World;
 
 namespace Shooter;
@@ -21,11 +23,11 @@ public class Game1 : Game
     private readonly PhysicObjectManager _physicObjectManager = new();
     private readonly MovementManager _movementManager = new();
 
-    private InputSystem _inputSystem;
+    private UserInputSystem _userInputSystem;
     private MovementSystem _movementSystem;
+    private CollisionProcessingSystem _collisionProcessingSystem;
     private PhysicsSystem _physicsSystem;
     private SyncSystem _syncSystem;
-    private ColorSystem _colorSystem;
     private DrawSystem _drawSystem;
 
     private readonly GraphicsDeviceManager _graphics;
@@ -88,14 +90,14 @@ public class Game1 : Game
 
         _movementManager.Register(MovementTypes.VerticalPaddle, new VerticalPaddlerHandler());
 
-        _inputSystem = new InputSystem(_world);
+        _userInputSystem = new UserInputSystem(_world);
         _movementSystem = new MovementSystem(_world, _movementManager, _physicObjectManager);
+        _collisionProcessingSystem = new CollisionProcessingSystem(_world);
         _physicsSystem = new PhysicsSystem(_world, _physicsWorld);
         _syncSystem = new SyncSystem(_world, _physicObjectManager);
-        _colorSystem = new ColorSystem(_world);
         _drawSystem = new DrawSystem(_world, _spriteBatch);
 
-        CreateEntities();
+        CreateLevel();
     }
 
     protected override void Update(GameTime gameTime)
@@ -104,8 +106,9 @@ public class Game1 : Game
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
 
-        _inputSystem.Update(gameTime);
+        _userInputSystem.Update(gameTime);
         _movementSystem.Update(gameTime);
+        _collisionProcessingSystem.Update(gameTime);
         _physicsSystem.Update(gameTime);
         _syncSystem.Update(gameTime);
 
@@ -115,7 +118,6 @@ public class Game1 : Game
     protected override void Draw(GameTime gameTime)
     {
         _graphics.GraphicsDevice.Clear(Color.White);
-        _colorSystem.Update(in gameTime);
         _drawSystem.Update(in gameTime);
 
         base.Draw(gameTime);
@@ -129,12 +131,13 @@ public class Game1 : Game
         _jobScheduler.Dispose();
     }
 
-    private void CreateEntities()
+    private void CreateLevel()
     {
         //ball
         var ballEntity = _world.Create(
             new Position { Vector = new Vector2(40, 30) },
-            new Sprite { Texture = _ballTexture, Color = Color.Red });
+            new Sprite { Texture = _ballTexture, Color = Color.Red },
+            new Ball { TargetVelocity = 60 });
 
         var ballBody = _physicsWorld.CreateBody(
             new nkast.Aether.Physics2D.Common.Vector2(40, 30),
@@ -160,11 +163,12 @@ public class Game1 : Game
             {
                 TargetVelocity = 40,
                 TargetForce = 100000,
-                CurrentVelocity = 0,
                 Type = MovementTypes.VerticalPaddle
             },
             new Position { Vector = new Vector2(70, 30) },
-            new Sprite { Texture = _playerTexture, Color = Color.Black }
+            new Sprite { Texture = _playerTexture, Color = Color.Black },
+            new Player { Index = 1 },
+            new RectangleCollider { Width = 3.2f, Height = 20f }
         );
 
         var player1Body = _physicsWorld.CreateBody(
@@ -173,12 +177,13 @@ public class Game1 : Game
         player1Body.Mass = 0.1f;
         player1Body.FixedRotation = true;
         player1Body.LinearDamping = 0;
+        player1Body.AngularDamping = 0;
         var player1Collider = player1Body.CreateRectangle(3.2f, 20f, 1f, nkast.Aether.Physics2D.Common.Vector2.Zero);
         player1Collider.Friction = 0;
         player1Collider.Restitution = 1;
 
-        _physicObjectManager.Add(player1Entity, PhysicObjectTypes.PhysicsBody,  player1Body, PhysicTags.MainBody);
-        
+        _physicObjectManager.Add(player1Entity, PhysicObjectTypes.PhysicsBody, player1Body, PhysicTags.MainBody);
+
         //joint for player 1
         var anchorPlayer1 = _physicsWorld.CreateBody(new nkast.Aether.Physics2D.Common.Vector2(70, 30));
         var jointPlayer1 = new PrismaticJoint(
@@ -203,11 +208,12 @@ public class Game1 : Game
             {
                 TargetVelocity = 40,
                 TargetForce = 100000,
-                CurrentVelocity = 0,
                 Type = MovementTypes.VerticalPaddle
             },
             new Position { Vector = new Vector2(10, 30) },
-            new Sprite { Texture = _playerTexture, Color = Color.Black }
+            new Sprite { Texture = _playerTexture, Color = Color.Black },
+            new Player { Index = 1 },
+            new RectangleCollider { Width = 3.2f, Height = 20f }
         );
 
         var player2Body = _physicsWorld.CreateBody(
@@ -216,12 +222,13 @@ public class Game1 : Game
         player2Body.Mass = 0.1f;
         player2Body.FixedRotation = true;
         player2Body.LinearDamping = 0;
+        player2Body.AngularDamping = 0;
         var player2Collider = player2Body.CreateRectangle(3.2f, 20f, 1f, nkast.Aether.Physics2D.Common.Vector2.Zero);
         player2Collider.Friction = 0;
         player2Collider.Restitution = 1;
 
         _physicObjectManager.Add(player2Entity, PhysicObjectTypes.PhysicsBody, player2Body, PhysicTags.MainBody);
-        
+
         //joint for player 2
         var anchorPlayer2 = _physicsWorld.CreateBody(new nkast.Aether.Physics2D.Common.Vector2(10, 30));
         var jointPlayer2 = new PrismaticJoint(
@@ -270,5 +277,24 @@ public class Game1 : Game
         var wallBottomCollider = wallBottomBody.CreateRectangle(80, 0.1f, 1, nkast.Aether.Physics2D.Common.Vector2.Zero);
         wallBottomCollider.Friction = 0;
         wallBottomCollider.Restitution = 1;
+
+        //physics events
+        _physicsWorld.ContactManager.BeginContact += contact =>
+        {
+            var entityA = _physicObjectManager.GetEntity(contact.FixtureA.Body);
+            var entityB = _physicObjectManager.GetEntity(contact.FixtureB.Body);
+
+            if (!entityA.HasValue || !entityB.HasValue)
+                return false;
+
+            _world.Create(new CollisionEvent
+            {
+                EntityA = entityA.Value,
+                EntityB = entityB.Value,
+                Contact = contact
+            });
+
+            return true;
+        };
     }
 }

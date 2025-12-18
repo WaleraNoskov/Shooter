@@ -29,7 +29,7 @@ public class MovementSystem(World world, MovementManager movementManager, Physic
             if (handler is null)
                 return;
 
-            var objects = physicObjectManager.Get(entity);
+            var objects = physicObjectManager.GetObject(entity);
             if (objects is null)
                 return;
             

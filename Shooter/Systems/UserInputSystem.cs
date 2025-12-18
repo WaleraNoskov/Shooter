@@ -5,11 +5,11 @@ using Shooter.Components;
 
 namespace Shooter.Systems;
 
-public class InputSystem : SystemBase<GameTime>
+public class UserInputSystem : SystemBase<GameTime>
 {
     private readonly QueryDescription _entitiesToSetInput = new QueryDescription().WithAll<Input>();
 
-    public InputSystem(World world) : base(world)
+    public UserInputSystem(World world) : base(world)
     {
     }
 
