@@ -2,6 +2,6 @@
 
 public class RectangleCollider
 {
-    public float Width { get; set; }
-    public float Height { get; set; }
+    public float Width;
+    public float Height;
 }

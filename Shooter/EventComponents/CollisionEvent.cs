@@ -7,5 +7,4 @@ public struct CollisionEvent
 {
     public Entity EntityA  { get; set; }
     public Entity EntityB { get; set; }
-    public Contact Contact { get; set; }
 }

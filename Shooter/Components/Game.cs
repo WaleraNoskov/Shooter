@@ -2,6 +2,6 @@
 
 public struct Game
 {
-    public int? WinningPlayerIndex { get; set; }
-    public Player Player { get; set; }
+    public int? WinningPlayerIndex;
+    public Player Player;
 }

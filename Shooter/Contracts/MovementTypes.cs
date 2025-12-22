@@ -5,4 +5,5 @@ public enum MovementTypes
     None,
     VerticalPaddle,
     HorizontalPaddle,
+    Ball
 }

@@ -8,6 +8,7 @@ using Shooter.Components;
 using Shooter.Contracts;
 using Shooter.EventComponents;
 using Shooter.Services;
+using Shooter.Services.InputHandlers;
 using Shooter.Services.MovementHandlers;
 using Shooter.Systems;
 using Game = Microsoft.Xna.Framework.Game;
@@ -21,9 +22,11 @@ public class Game1 : Game
     private nkast.Aether.Physics2D.Dynamics.World _physicsWorld;
     private JobScheduler _jobScheduler;
     private readonly PhysicObjectManager _physicObjectManager = new();
+    private readonly InputManager _inputManager = new();
     private readonly MovementManager _movementManager = new();
 
     private UserInputSystem _userInputSystem;
+    private InputHandleSystem _inputHandleSystem;
     private MovementSystem _movementSystem;
     private CollisionProcessingSystem _collisionProcessingSystem;
     private PhysicsSystem _physicsSystem;
@@ -88,9 +91,13 @@ public class Game1 : Game
             Gravity = new nkast.Aether.Physics2D.Common.Vector2(0, 0)
         };
 
-        _movementManager.Register(MovementTypes.VerticalPaddle, new VerticalPaddlerHandler());
+        _inputManager.Register(MovementTypes.VerticalPaddle, new VerticalPaddlerInputHandler());
+
+        _movementManager.Register(MovementTypes.VerticalPaddle, new VerticalPaddlerMovementHandler());
+        _movementManager.Register(MovementTypes.Ball, new BallMovementHandler());
 
         _userInputSystem = new UserInputSystem(_world);
+        _inputHandleSystem = new InputHandleSystem(_world, _inputManager);
         _movementSystem = new MovementSystem(_world, _movementManager, _physicObjectManager);
         _collisionProcessingSystem = new CollisionProcessingSystem(_world);
         _physicsSystem = new PhysicsSystem(_world, _physicsWorld);
@@ -107,6 +114,7 @@ public class Game1 : Game
             Exit();
 
         _userInputSystem.Update(gameTime);
+        _inputHandleSystem.Update(gameTime);
         _movementSystem.Update(gameTime);
         _collisionProcessingSystem.Update(gameTime);
         _physicsSystem.Update(gameTime);
@@ -135,9 +143,17 @@ public class Game1 : Game
     {
         //ball
         var ballEntity = _world.Create(
-            new Position { Vector = new Vector2(40, 30) },
+            new ActualMovement(),
+            new TargetMovement
+            {
+                MaxVelocity = 60,
+                Velocity = 60,
+                Direction = new System.Numerics.Vector2(1, 0.5f),
+                Type = MovementTypes.Ball,
+                NeedToMove = true
+            },
             new Sprite { Texture = _ballTexture, Color = Color.Red },
-            new Ball { TargetVelocity = 60 });
+            new Ball());
 
         var ballBody = _physicsWorld.CreateBody(
             new nkast.Aether.Physics2D.Common.Vector2(40, 30),
@@ -154,18 +170,16 @@ public class Game1 : Game
 
         _physicObjectManager.Add(ballEntity, PhysicObjectTypes.PhysicsBody, ballBody, PhysicTags.MainBody);
 
-        ballBody.ApplyLinearImpulse(new nkast.Aether.Physics2D.Common.Vector2(100f, 50f));
-
         //player 1
         var player1Entity = _world.Create(
-            new Input { PlayerIndex = 1 },
-            new Movement
+            new UserInput { PlayerIndex = 1 },
+            new TargetMovement
             {
-                TargetVelocity = 40,
+                MaxVelocity = 40,
                 TargetForce = 100000,
                 Type = MovementTypes.VerticalPaddle
             },
-            new Position { Vector = new Vector2(70, 30) },
+            new ActualMovement(),
             new Sprite { Texture = _playerTexture, Color = Color.Black },
             new Player { Index = 1 },
             new RectangleCollider { Width = 3.2f, Height = 20f }
@@ -203,14 +217,14 @@ public class Game1 : Game
 
         //player 2
         var player2Entity = _world.Create(
-            new Input { PlayerIndex = 2 },
-            new Movement
+            new UserInput { PlayerIndex = 2 },
+            new TargetMovement
             {
-                TargetVelocity = 40,
+                MaxVelocity = 40,
                 TargetForce = 100000,
                 Type = MovementTypes.VerticalPaddle
             },
-            new Position { Vector = new Vector2(10, 30) },
+            new ActualMovement(),
             new Sprite { Texture = _playerTexture, Color = Color.Black },
             new Player { Index = 1 },
             new RectangleCollider { Width = 3.2f, Height = 20f }
@@ -291,7 +305,6 @@ public class Game1 : Game
             {
                 EntityA = entityA.Value,
                 EntityB = entityB.Value,
-                Contact = contact
             });
 
             return true;

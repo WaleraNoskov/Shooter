@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Linq;
 using Arch.Core;
 using Arch.Core.Extensions;
 using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Common;
+using nkast.Aether.Physics2D.Dynamics;
 using Shooter.Components;
+using Shooter.Contracts;
 using Shooter.EventComponents;
+using Shooter.Services;
 using Vector2 = nkast.Aether.Physics2D.Common.Vector2;
+using World = Arch.Core.World;
 
 namespace Shooter.Systems;
 
@@ -19,14 +24,15 @@ public class CollisionProcessingSystem(World world) : SystemBase<GameTime>(world
         World.InlineParallelEntityQuery<CollisionProcessing, CollisionEvent>(in _query, ref collisionProcessing);
     }
 
-    private readonly struct CollisionProcessing(World world) : IForEachWithEntity<CollisionEvent>
+    private readonly struct CollisionProcessing(World world)
+        : IForEachWithEntity<CollisionEvent>
     {
         public void Update(Entity entity, ref CollisionEvent collisionEvent)
         {
-            var foundBallInA = collisionEvent.EntityA.Has<Ball>();
-            var foundBallInB = collisionEvent.EntityB.Has<Ball>();
-            var foundPlayerInA = collisionEvent.EntityA.Has<Player>();
-            var foundPlayerInB = collisionEvent.EntityB.Has<Player>();
+            var foundBallInA = collisionEvent.EntityA.Has<Ball, TargetMovement, ActualMovement>();
+            var foundBallInB = collisionEvent.EntityB.Has<Ball, TargetMovement, ActualMovement>();
+            var foundPlayerInA = collisionEvent.EntityA.Has<Player, ActualMovement>();
+            var foundPlayerInB = collisionEvent.EntityB.Has<Player, ActualMovement>();
 
             if (!foundBallInA && !foundBallInB || !foundPlayerInA && !foundPlayerInB)
             {
@@ -34,39 +40,47 @@ public class CollisionProcessingSystem(World world) : SystemBase<GameTime>(world
                 return;
             }
 
-            var ball = foundBallInA
-                ? ref collisionEvent.EntityA.Get<Ball>()
-                : ref collisionEvent.EntityB.Get<Ball>();
-            var ballBody = foundBallInA
-                ? collisionEvent.Contact.FixtureA.Body
-                : collisionEvent.Contact.FixtureB.Body;
+            var ballActualMovement = foundBallInA
+                ? ref collisionEvent.EntityA.Get<ActualMovement>()
+                : ref collisionEvent.EntityB.Get<ActualMovement>();
+            var ballTargetMovement = foundBallInA
+                ? ref collisionEvent.EntityA.Get<TargetMovement>()
+                : ref collisionEvent.EntityB.Get<TargetMovement>();
 
             var player = foundPlayerInA
                 ? ref collisionEvent.EntityA.Get<Player>()
                 : ref collisionEvent.EntityB.Get<Player>();
-            var playerBody = foundPlayerInA
-                ? collisionEvent.Contact.FixtureA.Body
-                : collisionEvent.Contact.FixtureB.Body;
+            var playerActualMovement = foundPlayerInA
+                ? ref collisionEvent.EntityA.Get<ActualMovement>()
+                : ref collisionEvent.EntityB.Get<ActualMovement>();
             var playerCollider = foundPlayerInA
                 ? ref collisionEvent.EntityA.Get<RectangleCollider>()
                 : ref collisionEvent.EntityB.Get<RectangleCollider>();
-
-            collisionEvent.Contact.GetWorldManifold(out var normal, out var points);
-            var contactPoint = points[0];
-
-            var offset = contactPoint.Y - playerBody.Position.Y;
-            var normalized = MathHelper.Clamp(offset / (playerCollider.Height / 2f) * -1, -1f, 1f);
-
-            var bounceAngle = normalized * MathHelper.ToRadians(60f);
-            float directionX = MathF.Sign(ballBody.LinearVelocity.X);
             
-            var newVelocity = new Vector2(
-                MathF.Cos(bounceAngle) * directionX * ball.TargetVelocity,
-                MathF.Sin(bounceAngle) * ball.TargetVelocity
+            player.Score++;
+
+            var ballPos = ballActualMovement.Position;
+            var paddlePos = playerActualMovement.Position;
+
+            var offsetY = ballPos.Y - paddlePos.Y;
+            var halfHeight = playerCollider.Height * 0.5f;
+            var normalized = Math.Clamp(offsetY / halfHeight, -1f, 1f);
+
+            const float maxBounceAngle = MathF.PI / 3f;
+            var angle = normalized * maxBounceAngle;
+
+            var directionX = ballPos.X < paddlePos.X ? -1f : 1f;
+
+            System.Numerics.Vector2 newDirection = new(
+                MathF.Cos(angle) * directionX,
+                MathF.Sin(angle)
             );
+            newDirection = System.Numerics.Vector2.Normalize(newDirection);
 
-            ballBody.LinearVelocity = newVelocity;
+            ballTargetMovement.Direction = new System.Numerics.Vector2(newDirection.X, newDirection.Y);
 
+            ballTargetMovement.NeedToMove = true;
+            
             world.Destroy(entity);
         }
     }

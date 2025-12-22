@@ -9,23 +9,26 @@ namespace Shooter.Systems;
 
 public class MovementSystem(World world, MovementManager movementManager, PhysicObjectManager physicObjectManager) : SystemBase<GameTime>(world)
 {
-    private readonly QueryDescription _entitiesToMove = new QueryDescription().WithAll<Input, Movement>();
+    private readonly QueryDescription _entitiesToMove = new QueryDescription().WithAll<TargetMovement>();
 
     public override void Update(in GameTime gameTime)
     {
         var moving = new Move(gameTime.ElapsedGameTime, movementManager, physicObjectManager);
-        World.InlineParallelEntityQuery<Move, Input, Movement>(in _entitiesToMove, ref moving);
+        World.InlineParallelEntityQuery<Move, TargetMovement>(in _entitiesToMove, ref moving);
     }
 
     private readonly struct Move(
         TimeSpan elapsedTime,
         MovementManager movementManager,
         PhysicObjectManager physicObjectManager)
-        : IForEachWithEntity<Input, Movement>
+        : IForEachWithEntity<TargetMovement>
     {
-        public void Update(Entity entity, ref Input input, ref Movement movement)
+        public void Update(Entity entity, ref TargetMovement targetMovement)
         {
-            var handler = movementManager.Get(movement.Type);
+            if (!targetMovement.NeedToMove)
+                return;
+            
+            var handler = movementManager.Get(targetMovement.Type);
             if (handler is null)
                 return;
 
@@ -33,7 +36,9 @@ public class MovementSystem(World world, MovementManager movementManager, Physic
             if (objects is null)
                 return;
             
-            handler.Move(elapsedTime, ref input, ref movement, objects);
+            handler.Move(elapsedTime, ref targetMovement, objects);
+            
+            targetMovement.NeedToMove = false;
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Shooter.Systems;
 
 public class UserInputSystem : SystemBase<GameTime>
 {
-    private readonly QueryDescription _entitiesToSetInput = new QueryDescription().WithAll<Input>();
+    private readonly QueryDescription _entitiesToSetInput = new QueryDescription().WithAll<UserInput>();
 
     public UserInputSystem(World world) : base(world)
     {
@@ -15,22 +15,16 @@ public class UserInputSystem : SystemBase<GameTime>
 
     public override void Update(in GameTime gameTime)
     {
-        var settingInput = new SetInput((float)gameTime.ElapsedGameTime.TotalMilliseconds);
-        World.InlineParallelQuery<SetInput, Input>(in _entitiesToSetInput, ref settingInput);
+        var settingInput = new SetInput();
+        World.InlineParallelQuery<SetInput, UserInput>(in _entitiesToSetInput, ref settingInput);
     }
 
-    private readonly struct SetInput : IForEach<Input>
+    private readonly struct SetInput : IForEach<UserInput>
     {
-        private readonly float _deltaTime;
 
-        public SetInput(float deltaTime)
+        public void Update(ref UserInput userInput)
         {
-            _deltaTime = deltaTime;
-        }
-
-        public void Update(ref Input input)
-        {
-            if (input.PlayerIndex == 1)
+            if (userInput.PlayerIndex == 1)
             {
                 int x, y;
 
@@ -48,10 +42,10 @@ public class UserInputSystem : SystemBase<GameTime>
                 else
                     x = 0;
 
-                input.X = x;
-                input.Y = y;
+                userInput.X = x;
+                userInput.Y = y;
             }
-            else if (input.PlayerIndex == 2)
+            else if (userInput.PlayerIndex == 2)
             {
                 int x = 0, y = 0;
 
@@ -69,8 +63,8 @@ public class UserInputSystem : SystemBase<GameTime>
                 else
                     x = 0;
 
-                input.X = x;
-                input.Y = y;
+                userInput.X = x;
+                userInput.Y = y;
             }
         }
     }

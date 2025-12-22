@@ -1,6 +1,6 @@
 ﻿namespace Shooter.Components;
 
-public struct Input
+public struct UserInput
 {
     public float X;
     public float Y;

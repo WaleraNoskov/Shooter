@@ -7,7 +7,7 @@ namespace Shooter.Systems;
 
 public class DrawSystem : SystemBase<GameTime>
 {
-    private readonly QueryDescription _entitiesToDraw = new QueryDescription().WithAll<Position, Sprite>();
+    private readonly QueryDescription _entitiesToDraw = new QueryDescription().WithAll<ActualMovement, Sprite>();
     private readonly SpriteBatch _batch;
 
     public DrawSystem(World world, SpriteBatch batch) : base(world)
@@ -21,7 +21,7 @@ public class DrawSystem : SystemBase<GameTime>
         var query = World.Query(in _entitiesToDraw);
         foreach (ref var chunk in query)
         {
-            chunk.GetSpan<Position, Sprite>(out var positions, out var sprites);
+            chunk.GetSpan<ActualMovement, Sprite>(out var positions, out var sprites);
 
             foreach (var index in chunk)
             {
@@ -35,7 +35,7 @@ public class DrawSystem : SystemBase<GameTime>
 
                 _batch.Draw(
                     sprite.Texture,
-                    position.Vector * 10f,
+                    position.Position * 10f,
                     null,
                     sprite.Color,
                     position.Angle,
