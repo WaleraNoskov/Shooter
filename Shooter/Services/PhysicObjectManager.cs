@@ -34,8 +34,12 @@ public class PhysicObjectManager
 
     public EntityPhysicsObjects? GetObject(Entity entity) => _entities.GetValueOrDefault(entity);
     
-    public Entity? GetEntity(Body body) => _bodiesToEntities.GetValueOrDefault(body);
-    
+    public Entity? GetEntity(Body body)
+    {
+        var gotEntity = _bodiesToEntities.TryGetValue(body, out var entity);
+        return gotEntity ? entity : null;
+    }
+
     public T? GetByTag<T>(Entity entity, PhysicObjectTypes type, string tag) where T : class
     {
         if (_entities.TryGetValue(entity, out var ep))

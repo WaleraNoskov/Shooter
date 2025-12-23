@@ -22,6 +22,8 @@ public class InputHandleSystem(World world, InputManager inputManager) : SystemB
         {
             var handler = inputManager.Get(targetMovement.Type);
             handler?.SetMovement(ref userInput, ref targetMovement);
+            
+            targetMovement.NeedToMove = true;
         }
     }
 }

@@ -19,7 +19,5 @@ public class VerticalPaddlerInputHandler : IInputHandler
             targetMovement.Velocity = Math.Abs(targetMovement.MaxVelocity * input.Y);
             targetMovement.Direction = new Vector2(0, input.Y > 0 ? 1 : -1);
         }
-        
-        targetMovement.NeedToMove = true;
     }
 }

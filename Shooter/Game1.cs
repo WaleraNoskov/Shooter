@@ -1,4 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Arch.Core;
+using Arch.Core.Extensions;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using nkast.Aether.Physics2D.Dynamics;
@@ -12,6 +15,7 @@ using Shooter.Services.InputHandlers;
 using Shooter.Services.MovementHandlers;
 using Shooter.Systems;
 using Game = Microsoft.Xna.Framework.Game;
+using Vector2 = System.Numerics.Vector2;
 using World = Arch.Core.World;
 
 namespace Shooter;
@@ -28,7 +32,8 @@ public class Game1 : Game
     private UserInputSystem _userInputSystem;
     private InputHandleSystem _inputHandleSystem;
     private MovementSystem _movementSystem;
-    private CollisionProcessingSystem _collisionProcessingSystem;
+    private BallCollisionSystem _ballCollisionSystem;
+    private CollisionCleanupSystem _collisionCleanupSystem;
     private PhysicsSystem _physicsSystem;
     private SyncSystem _syncSystem;
     private DrawSystem _drawSystem;
@@ -99,7 +104,8 @@ public class Game1 : Game
         _userInputSystem = new UserInputSystem(_world);
         _inputHandleSystem = new InputHandleSystem(_world, _inputManager);
         _movementSystem = new MovementSystem(_world, _movementManager, _physicObjectManager);
-        _collisionProcessingSystem = new CollisionProcessingSystem(_world);
+        _ballCollisionSystem = new BallCollisionSystem(_world);
+        _collisionCleanupSystem = new CollisionCleanupSystem(_world);
         _physicsSystem = new PhysicsSystem(_world, _physicsWorld);
         _syncSystem = new SyncSystem(_world, _physicObjectManager);
         _drawSystem = new DrawSystem(_world, _spriteBatch);
@@ -115,8 +121,12 @@ public class Game1 : Game
 
         _userInputSystem.Update(gameTime);
         _inputHandleSystem.Update(gameTime);
+
+        _ballCollisionSystem.Update(gameTime);
+        _collisionCleanupSystem.Update(gameTime);
+
         _movementSystem.Update(gameTime);
-        _collisionProcessingSystem.Update(gameTime);
+
         _physicsSystem.Update(gameTime);
         _syncSystem.Update(gameTime);
 
@@ -153,6 +163,7 @@ public class Game1 : Game
                 NeedToMove = true
             },
             new Sprite { Texture = _ballTexture, Color = Color.Red },
+            new RectangleCollider { Width = 1.6f, Height = 1.6f, Layer = CollisionLayer.Ball },
             new Ball());
 
         var ballBody = _physicsWorld.CreateBody(
@@ -182,7 +193,7 @@ public class Game1 : Game
             new ActualMovement(),
             new Sprite { Texture = _playerTexture, Color = Color.Black },
             new Player { Index = 1 },
-            new RectangleCollider { Width = 3.2f, Height = 20f }
+            new RectangleCollider { Width = 3.2f, Height = 20f, Layer = CollisionLayer.Player }
         );
 
         var player1Body = _physicsWorld.CreateBody(
@@ -227,7 +238,7 @@ public class Game1 : Game
             new ActualMovement(),
             new Sprite { Texture = _playerTexture, Color = Color.Black },
             new Player { Index = 1 },
-            new RectangleCollider { Width = 3.2f, Height = 20f }
+            new RectangleCollider { Width = 3.2f, Height = 20f, Layer = CollisionLayer.Player }
         );
 
         var player2Body = _physicsWorld.CreateBody(
@@ -295,19 +306,54 @@ public class Game1 : Game
         //physics events
         _physicsWorld.ContactManager.BeginContact += contact =>
         {
-            var entityA = _physicObjectManager.GetEntity(contact.FixtureA.Body);
-            var entityB = _physicObjectManager.GetEntity(contact.FixtureB.Body);
+            var bodyA = contact.FixtureA.Body;
+            var entityA = _physicObjectManager.GetEntity(bodyA);
 
-            if (!entityA.HasValue || !entityB.HasValue)
-                return false;
+            var bodyB = contact.FixtureB.Body;
+            var entityB = _physicObjectManager.GetEntity(bodyB);
 
-            _world.Create(new CollisionEvent
+            if (!entityA.HasValue
+                || !entityA.Value.Has<RectangleCollider>()
+                || !entityB.HasValue
+                || !entityB.Value.Has<RectangleCollider>())
+                return true;
+
+            var colliderA = entityA.Value.Get<RectangleCollider>();
+            var colliderB = entityB.Value.Get<RectangleCollider>();
+            
+            contact.GetWorldManifold(out var normal, out var points);
+            var sideA = GetEdgeFromNormal(new Vector2(-normal.X, -normal.Y));
+            var sideB = GetEdgeFromNormal(new Vector2(normal.X, normal.Y));
+            
+            _world.Add(entityA.Value, new Collision
             {
-                EntityA = entityA.Value,
-                EntityB = entityB.Value,
+                Normal = new Vector2(-normal.X, -normal.Y),
+                Point = new Vector2(points[0].X, points[0].Y),
+                OtherLayer = colliderB.Layer,
+                OtherVelocity = new Vector2(bodyB.LinearVelocity.X, bodyB.LinearVelocity.Y),
+                OtherEdge = GetEdgeFromNormal(new Vector2(normal.X, normal.Y)),
+                OtherEdgeLength = sideB is RectEdge.Top or RectEdge.Bottom ? colliderB.Height : colliderB.Width
+            });
+
+            _world.Add(entityB.Value, new Collision
+            {
+                Normal = new Vector2(normal.X, normal.Y),
+                Point = new Vector2(points[1].X, points[1].Y),
+                OtherLayer = colliderA.Layer,
+                OtherVelocity = new Vector2(bodyA.LinearVelocity.X, bodyA.LinearVelocity.Y),
+                OtherEdge = GetEdgeFromNormal(new Vector2(-normal.X, -normal.Y)),
+                OtherEdgeLength = sideA is RectEdge.Left or RectEdge.Right ? colliderA.Height : colliderA.Width
             });
 
             return true;
         };
+    }
+    
+    public static RectEdge GetEdgeFromNormal(Vector2 normal)
+    {
+        if (MathF.Abs(normal.X) > MathF.Abs(normal.Y))
+            return normal.X > 0 ? RectEdge.Left : RectEdge.Right;
+        else
+            return normal.Y > 0 ? RectEdge.Bottom : RectEdge.Top;
     }
 }
