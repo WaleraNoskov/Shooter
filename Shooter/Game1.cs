@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Gum.Forms;
+using Microsoft.Xna.Framework;
+using MonoGameGum;
 using Shooter.Contracts;
 using Shooter.GameStates;
 using Game = Microsoft.Xna.Framework.Game;
@@ -18,6 +20,7 @@ public class Game1 : Game
             PreferredBackBufferWidth = 800,
             PreferredBackBufferHeight = 600
         };
+        
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
     }
@@ -25,7 +28,10 @@ public class Game1 : Game
     protected override void Initialize()
     {
         base.Initialize();
-        ChangeState(new MainMenuGameState());
+
+        GumService.Default.Initialize(this, DefaultVisualsVersion.V3);
+        
+        ChangeState(new MainMenuGameState(_graphics.GraphicsDevice));
     }
 
     protected override void Update(GameTime gameTime)
@@ -57,7 +63,7 @@ public class Game1 : Game
                 Exit();
                 break;
             case GameStateCommand.ExitToMenu:
-                ChangeState(new MainMenuGameState());
+                ChangeState(new MainMenuGameState(_graphics.GraphicsDevice));
                 break;
             case GameStateCommand.Start:
                 ChangeState(new PongGameState(_graphics.GraphicsDevice));
