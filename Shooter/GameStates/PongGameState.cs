@@ -16,7 +16,7 @@ using World = Arch.Core.World;
 
 namespace Shooter.GameStates;
 
-public class PongGameState : IGameState
+public class PongGameState(GraphicsDevice graphicsDevice) : IGameState
 {
     private World? _world;
     private nkast.Aether.Physics2D.Dynamics.World? _physicsWorld;
@@ -36,14 +36,14 @@ public class PongGameState : IGameState
     private DrawSystem? _drawSystem;
 
     //Graphics
-    private GraphicsDevice? _graphicsDevice;
     private SpriteBatch? _spriteBatch;
     private Texture2D? _ballTexture;
     private Texture2D? _playerTexture;
+    
+    public GameStateCommand Command { get; private set; }
 
-    public void Enter(GraphicsDevice graphicsDevice)
+    public void Enter()
     {
-        _graphicsDevice = graphicsDevice;
         _spriteBatch = new SpriteBatch(graphicsDevice);
         _ballTexture = new Texture2D(graphicsDevice, 16, 16);
         _playerTexture = new Texture2D(graphicsDevice, 32, 200);
@@ -111,7 +111,7 @@ public class PongGameState : IGameState
 
     public void Draw(GameTime time)
     {
-        _graphicsDevice?.Clear(Color.White);
+        graphicsDevice.Clear(Color.White);
         _drawSystem?.Update(in time);
     }
 

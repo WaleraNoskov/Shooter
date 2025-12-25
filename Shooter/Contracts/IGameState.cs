@@ -6,7 +6,9 @@ namespace Shooter.Contracts;
 
 public interface IGameState : IDisposable
 {
-    void Enter(GraphicsDevice device);
+    public GameStateCommand Command { get; }
+    
+    void Enter();
     void Exit();
 
     void Update(GameTime time);
