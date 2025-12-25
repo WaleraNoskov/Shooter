@@ -42,27 +42,18 @@ public class BallCollisionSystem(World world) : SystemBase<GameTime>(world)
         const float maxBounceAngle = MathF.PI / 3f; 
         
         var halfEdge = collision.OtherEdgeLength * 0.5f;
-
-        var offset =
-            collision.OtherEdge is RectEdge.Left or RectEdge.Right
-                ? (actual.Position.Y - collision.Point.Y)
-                : (actual.Position.X - collision.Point.X);
-
+        var offset = collision.OtherEdge is RectEdge.Left or RectEdge.Right
+                ? actual.Position.Y - collision.Point.Y
+                : actual.Position.X - collision.Point.X;
+        
         var normalized = Math.Clamp(offset / halfEdge, -1f, 1f);
-
-        // 3. Угол отскока
         var angle = normalized * maxBounceAngle;
-
-        // 4. Направление по X — от платформы
         var directionX = MathF.Sign(collision.Normal.X);
-
-        // 5. Новый вектор
         var dir = new Vector2(
             MathF.Cos(angle) * directionX,
             MathF.Sin(angle)
         );
 
-        // 6. Влияние движения платформы
         dir += collision.OtherVelocity * 0.02f;
 
         movement.Direction = Vector2.Normalize(dir);

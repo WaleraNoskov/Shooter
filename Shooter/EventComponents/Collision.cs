@@ -1,6 +1,4 @@
 ﻿using System.Numerics;
-using Arch.Core;
-using nkast.Aether.Physics2D.Dynamics.Contacts;
 using Shooter.Contracts;
 
 namespace Shooter.EventComponents;

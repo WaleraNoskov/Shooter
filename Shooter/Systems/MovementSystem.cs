@@ -2,7 +2,6 @@
 using Arch.Core;
 using Microsoft.Xna.Framework;
 using Shooter.Components;
-using Shooter.Contracts;
 using Shooter.Services;
 
 namespace Shooter.Systems;

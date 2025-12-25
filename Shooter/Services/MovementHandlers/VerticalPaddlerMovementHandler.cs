@@ -1,5 +1,4 @@
 ﻿using System;
-using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics.Joints;
 using Shooter.Components;
 using Shooter.Contracts;

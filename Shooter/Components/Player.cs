@@ -1,6 +1,4 @@
-﻿using Shooter.Contracts;
-
-namespace Shooter.Components;
+﻿namespace Shooter.Components;
 
 public struct Player
 {

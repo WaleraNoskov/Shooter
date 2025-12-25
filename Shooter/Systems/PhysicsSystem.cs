@@ -1,8 +1,5 @@
-﻿using System;
-using Arch.Core;
+﻿using Arch.Core;
 using Microsoft.Xna.Framework;
-using Shooter.Components;
-using Vector2 = nkast.Aether.Physics2D.Common.Vector2;
 
 namespace Shooter.Systems;
 

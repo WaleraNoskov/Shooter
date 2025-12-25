@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Arch.Core;
+﻿using Arch.Core;
 using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
 using Shooter.Components;
