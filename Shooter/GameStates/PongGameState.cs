@@ -37,6 +37,7 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
     private PhysicsSystem? _physicsSystem;
     private SyncSystem? _syncSystem;
     private DrawSystem? _drawSystem;
+    private UiSystem? _uiSystem;
 
     //Graphics
     private Texture2D? _ballTexture;
@@ -77,6 +78,7 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
         _physicsSystem = new PhysicsSystem(_world, _physicsWorld);
         _syncSystem = new SyncSystem(_world, _physicObjectManager);
         _drawSystem = new DrawSystem(_world, new SpriteBatch(graphicsDevice));
+        _uiSystem = new UiSystem(_world);
 
         CreateLevel();
     }
@@ -116,11 +118,13 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
     {
         graphicsDevice.Clear(new Color(255, 238, 204, 255));
 
-        if (_drawSystem is null)
-            return;
+        if (_drawSystem is not null)
+        {
+            _drawSystem.Alpha = _alpha;
+            _drawSystem.Update(in time);
+        }
         
-        _drawSystem.Alpha = _alpha;
-        _drawSystem.Update(in time);
+        _uiSystem?.Update(time);
     }
 
     private void CreateLevel()
