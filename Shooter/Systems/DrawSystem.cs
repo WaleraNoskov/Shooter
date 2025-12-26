@@ -7,7 +7,9 @@ namespace Shooter.Systems;
 
 public class DrawSystem : SystemBase<GameTime>
 {
-    private readonly QueryDescription _entitiesToDraw = new QueryDescription().WithAll<ActualMovement, Sprite>();
+    private readonly QueryDescription _entitiesToDraw = new QueryDescription()
+        .WithAll<ActualMovement, RectangleCollider, Sprite>();
+
     private readonly SpriteBatch _batch;
 
     public DrawSystem(World world, SpriteBatch batch) : base(world)
@@ -17,15 +19,22 @@ public class DrawSystem : SystemBase<GameTime>
 
     public override void Update(in GameTime gameTime)
     {
-        _batch.Begin();
+        const int worldToDisplayIndex = 10;
+        
+        _batch.Begin(samplerState: SamplerState.PointClamp);
+        
         var query = World.Query(in _entitiesToDraw);
         foreach (ref var chunk in query)
         {
-            chunk.GetSpan<ActualMovement, Sprite>(out var positions, out var sprites);
+            chunk.GetSpan<ActualMovement, RectangleCollider, Sprite>(
+                out var positions,
+                out var rectangleColliders,
+                out var sprites);
 
             foreach (var index in chunk)
             {
                 ref var sprite = ref sprites[index];
+                ref var collider = ref rectangleColliders[index];
                 ref var position = ref positions[index];
 
                 var origin = new Vector2(
@@ -33,14 +42,19 @@ public class DrawSystem : SystemBase<GameTime>
                     sprite.Texture.Height / 2f
                 );
 
+                var scale = new Vector2(
+                    collider.Width * worldToDisplayIndex / sprite.Texture.Width,
+                    collider.Height * worldToDisplayIndex / sprite.Texture.Height
+                );
+
                 _batch.Draw(
                     sprite.Texture,
-                    position.Position * 10f,
+                    position.Position * worldToDisplayIndex,
                     null,
-                    sprite.Color,
+                    Color.White,
                     position.Angle,
                     origin,
-                    Vector2.One,
+                    scale,
                     SpriteEffects.None,
                     0f
                 );

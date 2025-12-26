@@ -1,6 +1,5 @@
-﻿using Gum.Forms;
-using Microsoft.Xna.Framework;
-using MonoGameGum;
+﻿using Microsoft.Xna.Framework;
+using Myra;
 using Shooter.Contracts;
 using Shooter.GameStates;
 using Game = Microsoft.Xna.Framework.Game;
@@ -28,8 +27,8 @@ public class Game1 : Game
     protected override void Initialize()
     {
         base.Initialize();
-
-        GumService.Default.Initialize(this, DefaultVisualsVersion.V3);
+        
+        MyraEnvironment.Game = this;
         
         ChangeState(new MainMenuGameState(_graphics.GraphicsDevice));
     }
@@ -66,7 +65,7 @@ public class Game1 : Game
                 ChangeState(new MainMenuGameState(_graphics.GraphicsDevice));
                 break;
             case GameStateCommand.Start:
-                ChangeState(new PongGameState(_graphics.GraphicsDevice));
+                ChangeState(new PongGameState(_graphics.GraphicsDevice, Content));
                 break;
             case GameStateCommand.None:
             case GameStateCommand.Pause:

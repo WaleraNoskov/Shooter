@@ -1,6 +1,7 @@
 ﻿using System;
 using Arch.Core.Extensions;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Joints;
@@ -16,7 +17,7 @@ using World = Arch.Core.World;
 
 namespace Shooter.GameStates;
 
-public class PongGameState(GraphicsDevice graphicsDevice) : IGameState
+public class PongGameState(GraphicsDevice graphicsDevice, ContentManager contentManager) : IGameState
 {
     private World? _world;
     private nkast.Aether.Physics2D.Dynamics.World? _physicsWorld;
@@ -36,27 +37,17 @@ public class PongGameState(GraphicsDevice graphicsDevice) : IGameState
     private DrawSystem? _drawSystem;
 
     //Graphics
-    private SpriteBatch? _spriteBatch;
     private Texture2D? _ballTexture;
-    private Texture2D? _playerTexture;
+    private Texture2D? _player1Texture;
+    private Texture2D? _player2Texture;
     
     public GameStateCommand Command { get; private set; }
 
     public void Enter()
     {
-        _spriteBatch = new SpriteBatch(graphicsDevice);
-        _ballTexture = new Texture2D(graphicsDevice, 16, 16);
-        _playerTexture = new Texture2D(graphicsDevice, 32, 200);
-
-        var data = new Color[16 * 16];
-        for (var i = 0; i < data.Length; ++i)
-            data[i] = Color.White;
-        _ballTexture.SetData(data);
-
-        data = new Color[32 * 200];
-        for (var i = 0; i < data.Length; ++i)
-            data[i] = Color.Black;
-        _playerTexture.SetData(data);
+        _ballTexture = contentManager.Load<Texture2D>("Sprites/ball");
+        _player1Texture = contentManager.Load<Texture2D>("Sprites/player1");
+        _player2Texture = contentManager.Load<Texture2D>("Sprites/player2");
 
         _world = World.Create();
         _jobScheduler = new JobScheduler(new JobScheduler.Config
@@ -83,7 +74,7 @@ public class PongGameState(GraphicsDevice graphicsDevice) : IGameState
         _collisionCleanupSystem = new CollisionCleanupSystem(_world);
         _physicsSystem = new PhysicsSystem(_world, _physicsWorld);
         _syncSystem = new SyncSystem(_world, _physicObjectManager);
-        _drawSystem = new DrawSystem(_world, _spriteBatch);
+        _drawSystem = new DrawSystem(_world, new SpriteBatch(graphicsDevice));
 
         CreateLevel();
     }
@@ -111,13 +102,17 @@ public class PongGameState(GraphicsDevice graphicsDevice) : IGameState
 
     public void Draw(GameTime time)
     {
-        graphicsDevice.Clear(Color.White);
+        graphicsDevice.Clear(new Color(255, 238, 204, 255));
         _drawSystem?.Update(in time);
     }
 
     private void CreateLevel()
     {
-        if (_world is null || _physicsWorld is null || _ballTexture is null || _playerTexture is null)
+        if (_world is null 
+            || _physicsWorld is null 
+            || _ballTexture is null 
+            || _player1Texture is null 
+            || _player2Texture is null)
             return;
 
         //ball
@@ -160,7 +155,7 @@ public class PongGameState(GraphicsDevice graphicsDevice) : IGameState
                 Type = MovementTypes.VerticalPaddle
             },
             new ActualMovement(),
-            new Sprite { Texture = _playerTexture, Color = Color.Black },
+            new Sprite { Texture = _player1Texture, Color = Color.Black },
             new Player { Index = 1 },
             new RectangleCollider { Width = 3.2f, Height = 20f, Layer = CollisionLayer.Player }
         );
@@ -205,7 +200,7 @@ public class PongGameState(GraphicsDevice graphicsDevice) : IGameState
                 Type = MovementTypes.VerticalPaddle
             },
             new ActualMovement(),
-            new Sprite { Texture = _playerTexture, Color = Color.Black },
+            new Sprite { Texture = _player2Texture, Color = Color.Black },
             new Player { Index = 1 },
             new RectangleCollider { Width = 3.2f, Height = 20f, Layer = CollisionLayer.Player }
         );
