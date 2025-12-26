@@ -20,7 +20,6 @@ public class SyncSystem(World world, PhysicObjectManager physicObjectManager) : 
 
     private readonly struct Sync(PhysicObjectManager physicObjectManager) : IForEachWithEntity<ActualMovement>
     {
-
         public void Update(Entity entity, ref ActualMovement actualMovement)
         {
             var entityObjects = physicObjectManager.GetObject(entity);
@@ -29,9 +28,10 @@ public class SyncSystem(World world, PhysicObjectManager physicObjectManager) : 
                 return;
 
             var body = objects[0];
+            actualMovement.PreviousPosition = actualMovement.Position;
             actualMovement.Position = new Vector2(body.Position.X, body.Position.Y);
+            actualMovement.PreviousAngle = actualMovement.Angle;
             actualMovement.Angle = body.Rotation;
-            actualMovement.LinearVelocitySquared = body.LinearVelocity.LengthSquared();
         }
     }
 }

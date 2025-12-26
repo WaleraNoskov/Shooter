@@ -7,6 +7,6 @@ public class PhysicsSystem(World world, nkast.Aether.Physics2D.Dynamics.World ph
 {
     public override void Update(in GameTime gameTime)
     {
-        physicWorld.Step(1 / 100f);
+        physicWorld.Step(1 / 90f);
     }
 }

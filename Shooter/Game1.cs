@@ -17,7 +17,8 @@ public class Game1 : Game
         _graphics = new GraphicsDeviceManager(this)
         {
             PreferredBackBufferWidth = 800,
-            PreferredBackBufferHeight = 600
+            PreferredBackBufferHeight = 600, 
+            SynchronizeWithVerticalRetrace = true
         };
         
         Content.RootDirectory = "Content";

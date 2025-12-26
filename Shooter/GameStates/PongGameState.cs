@@ -25,6 +25,8 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
     private readonly PhysicObjectManager _physicObjectManager = new();
     private readonly InputManager _inputManager = new();
     private readonly MovementManager _movementManager = new();
+    private float _accumulator;
+    private float _alpha;
 
     //Systems
     private UserInputSystem? _userInputSystem;
@@ -40,7 +42,7 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
     private Texture2D? _ballTexture;
     private Texture2D? _player1Texture;
     private Texture2D? _player2Texture;
-    
+
     public GameStateCommand Command { get; private set; }
 
     public void Enter()
@@ -88,6 +90,9 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
 
     public void Update(GameTime time)
     {
+        const float fixedStep = 1f / 90;
+        _accumulator += (float)time.ElapsedGameTime.TotalSeconds;
+
         _userInputSystem?.Update(time);
         _inputHandleSystem?.Update(time);
 
@@ -96,22 +101,34 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
 
         _movementSystem?.Update(time);
 
-        _physicsSystem?.Update(time);
-        _syncSystem?.Update(time);
+        while (_accumulator > fixedStep)
+        {
+            _physicsSystem?.Update(time);
+            _syncSystem?.Update(time);
+
+            _accumulator -= fixedStep;
+        }
+
+        _alpha = _accumulator / fixedStep;
     }
 
     public void Draw(GameTime time)
     {
         graphicsDevice.Clear(new Color(255, 238, 204, 255));
-        _drawSystem?.Update(in time);
+
+        if (_drawSystem is null)
+            return;
+        
+        _drawSystem.Alpha = _alpha;
+        _drawSystem.Update(in time);
     }
 
     private void CreateLevel()
     {
-        if (_world is null 
-            || _physicsWorld is null 
-            || _ballTexture is null 
-            || _player1Texture is null 
+        if (_world is null
+            || _physicsWorld is null
+            || _ballTexture is null
+            || _player1Texture is null
             || _player2Texture is null)
             return;
 
@@ -120,9 +137,9 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
             new ActualMovement(),
             new TargetMovement
             {
-                MaxVelocity = 60,
-                Velocity = 60,
-                Direction = new System.Numerics.Vector2(1, 0.5f),
+                MaxVelocity = 30,
+                Velocity = 40,
+                Direction = new System.Numerics.Vector2(1, 0.2f),
                 Type = MovementTypes.Ball,
                 NeedToMove = true
             },
@@ -150,7 +167,7 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
             new UserInput { PlayerIndex = 1 },
             new TargetMovement
             {
-                MaxVelocity = 40,
+                MaxVelocity = 25,
                 TargetForce = 100000,
                 Type = MovementTypes.VerticalPaddle
             },
@@ -195,7 +212,7 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
             new UserInput { PlayerIndex = 2 },
             new TargetMovement
             {
-                MaxVelocity = 40,
+                MaxVelocity = 25,
                 TargetForce = 100000,
                 Type = MovementTypes.VerticalPaddle
             },
@@ -318,7 +335,7 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
     {
         if (MathF.Abs(normal.X) > MathF.Abs(normal.Y))
             return normal.X > 0 ? RectEdge.Left : RectEdge.Right;
-        
+
         return normal.Y > 0 ? RectEdge.Bottom : RectEdge.Top;
     }
 
