@@ -33,6 +33,7 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
     private InputHandleSystem? _inputHandleSystem;
     private MovementSystem? _movementSystem;
     private BallCollisionSystem? _ballCollisionSystem;
+    private PlayerCollisionSystem? _playerCollisionSystem;
     private CollisionCleanupSystem? _collisionCleanupSystem;
     private PhysicsSystem? _physicsSystem;
     private SyncSystem? _syncSystem;
@@ -74,6 +75,7 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
         _inputHandleSystem = new InputHandleSystem(_world, _inputManager);
         _movementSystem = new MovementSystem(_world, _movementManager, _physicObjectManager);
         _ballCollisionSystem = new BallCollisionSystem(_world);
+        _playerCollisionSystem = new PlayerCollisionSystem(_world);
         _collisionCleanupSystem = new CollisionCleanupSystem(_world);
         _physicsSystem = new PhysicsSystem(_world, _physicsWorld);
         _syncSystem = new SyncSystem(_world, _physicObjectManager);
@@ -95,18 +97,19 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
         const float fixedStep = 1f / 100;
         _accumulator += (float)time.ElapsedGameTime.TotalSeconds;
 
-        _userInputSystem?.FixedUpdate(fixedStep);
-        _inputHandleSystem?.FixedUpdate(fixedStep);
+        _userInputSystem!.FixedUpdate(fixedStep);
+        _inputHandleSystem!.FixedUpdate(fixedStep);
 
-        _ballCollisionSystem?.FixedUpdate(fixedStep);
-        _collisionCleanupSystem?.FixedUpdate(fixedStep);
+        _ballCollisionSystem!.FixedUpdate(fixedStep);
+        _playerCollisionSystem!.FixedUpdate(fixedStep);
+        _collisionCleanupSystem!.FixedUpdate(fixedStep);
 
-        _movementSystem?.FixedUpdate(fixedStep);
+        _movementSystem!.FixedUpdate(fixedStep);
 
         while (_accumulator > fixedStep)
         {
-            _physicsSystem?.FixedUpdate(fixedStep);
-            _syncSystem?.FixedUpdate(fixedStep);
+            _physicsSystem!.FixedUpdate(fixedStep);
+            _syncSystem!.FixedUpdate(fixedStep);
 
             _accumulator -= fixedStep;
         }
@@ -222,7 +225,7 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
             },
             new ActualMovement(),
             new Sprite { Texture = _player2Texture, Color = Color.Black },
-            new Player { Index = 1 },
+            new Player { Index = 2 },
             new RectangleCollider { Width = 3.2f, Height = 20f, Layer = CollisionLayer.Player }
         );
 
