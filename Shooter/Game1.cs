@@ -1,6 +1,11 @@
 ﻿using System;
+using System.IO;
+using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Myra;
+using Myra.Graphics2D;
+using Myra.Graphics2D.Brushes;
+using Myra.Graphics2D.UI.Styles;
 using Shooter.Contracts;
 using Shooter.GameStates;
 using Game = Microsoft.Xna.Framework.Game;
@@ -33,6 +38,7 @@ public class Game1 : Game
         base.Initialize();
         
         MyraEnvironment.Game = this;
+        SetStyle();
         
         ChangeState(new MainMenuGameState(_graphics.GraphicsDevice));
     }
@@ -85,5 +91,25 @@ public class Game1 : Game
 
         _currentState = newState;
         _currentState.Enter();
+    }
+    
+    private static void SetStyle()
+    {
+        var ttfData = File.ReadAllBytes("./PixelifySans.ttf");
+
+        var fontSystem = new FontSystem();
+        fontSystem.AddFont(ttfData);
+
+        Stylesheet.Current.Fonts.Add("display", fontSystem.GetFont(96));
+        Stylesheet.Current.Fonts.Add("normal", fontSystem.GetFont(40));
+
+        var defaultButtonStyle = new ButtonStyle
+        {
+            OverBackground = new SolidBrush(new Color(255, 105, 115)),
+            Background = new SolidBrush(new Color(255, 176, 163)),
+            Border = new SolidBrush(new Color(255, 105, 115)),
+            BorderThickness = new Thickness(4)
+        };
+        Stylesheet.Current.ButtonStyles.Add("default", defaultButtonStyle);
     }
 }

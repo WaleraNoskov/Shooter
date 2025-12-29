@@ -2,6 +2,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Shooter.Components;
+using Shooter.Contracts;
+using Shooter.Services;
 
 namespace Shooter.Systems;
 

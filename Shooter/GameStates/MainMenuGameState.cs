@@ -19,7 +19,6 @@ public class MainMenuGameState(GraphicsDevice graphicsDevice) : IGameState
 
     public void Enter()
     {
-        SetStyle();
         RenderMenu();
     }
 
@@ -37,26 +36,6 @@ public class MainMenuGameState(GraphicsDevice graphicsDevice) : IGameState
     {
         graphicsDevice.Clear(new Color(70, 66, 94));
         _desktop?.Render();
-    }
-
-    private static void SetStyle()
-    {
-        var ttfData = File.ReadAllBytes("./PixelifySans.ttf");
-
-        var fontSystem = new FontSystem();
-        fontSystem.AddFont(ttfData);
-
-        Stylesheet.Current.Fonts.Add("display", fontSystem.GetFont(96));
-        Stylesheet.Current.Fonts.Add("normal", fontSystem.GetFont(40));
-
-        var defaultButtonStyle = new ButtonStyle
-        {
-            OverBackground = new SolidBrush(new Color(255, 105, 115)),
-            Background = new SolidBrush(new Color(255, 176, 163)),
-            Border = new SolidBrush(new Color(255, 105, 115))
-        };
-        defaultButtonStyle.BorderThickness = new Thickness(4);
-        Stylesheet.Current.ButtonStyles.Add("default", defaultButtonStyle);
     }
 
     private void RenderMenu()

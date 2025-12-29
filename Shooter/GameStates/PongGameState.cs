@@ -3,6 +3,7 @@ using Arch.Core.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Joints;
 using Schedulers;
@@ -25,6 +26,7 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
     private readonly PhysicObjectManager _physicObjectManager = new();
     private readonly InputManager _inputManager = new();
     private readonly MovementManager _movementManager = new();
+    private readonly GameManager _gameManager = new() { Status = GameStatus.Playing };
     private float _accumulator;
     private float _alpha;
 
@@ -80,7 +82,7 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
         _physicsSystem = new PhysicsSystem(_world, _physicsWorld);
         _syncSystem = new SyncSystem(_world, _physicObjectManager);
         _drawSystem = new DrawSystem(_world, new SpriteBatch(graphicsDevice));
-        _uiSystem = new UiSystem(_world);
+        _uiSystem = new UiSystem(_world, _gameManager);
 
         CreateLevel();
     }
@@ -94,27 +96,38 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
 
     public void Update(GameTime time)
     {
-        const float fixedStep = 1f / 100;
-        _accumulator += (float)time.ElapsedGameTime.TotalSeconds;
-
-        _userInputSystem!.FixedUpdate(fixedStep);
-        _inputHandleSystem!.FixedUpdate(fixedStep);
-
-        _ballCollisionSystem!.FixedUpdate(fixedStep);
-        _playerCollisionSystem!.FixedUpdate(fixedStep);
-        _collisionCleanupSystem!.FixedUpdate(fixedStep);
-
-        _movementSystem!.FixedUpdate(fixedStep);
-
-        while (_accumulator > fixedStep)
+        if (_gameManager.Status == GameStatus.End)
+            Command = GameStateCommand.ExitToMenu;
+        else if (_gameManager.Status == GameStatus.Playing)
         {
-            _physicsSystem!.FixedUpdate(fixedStep);
-            _syncSystem!.FixedUpdate(fixedStep);
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
+            {
+                _gameManager.Status = GameStatus.Paused;
+                return;
+            }
+            
+            const float fixedStep = 1f / 100;
+            _accumulator += (float)time.ElapsedGameTime.TotalSeconds;
 
-            _accumulator -= fixedStep;
+            _userInputSystem!.FixedUpdate(fixedStep);
+            _inputHandleSystem!.FixedUpdate(fixedStep);
+
+            _ballCollisionSystem!.FixedUpdate(fixedStep);
+            _playerCollisionSystem!.FixedUpdate(fixedStep);
+            _collisionCleanupSystem!.FixedUpdate(fixedStep);
+
+            _movementSystem!.FixedUpdate(fixedStep);
+
+            while (_accumulator > fixedStep)
+            {
+                _physicsSystem!.FixedUpdate(fixedStep);
+                _syncSystem!.FixedUpdate(fixedStep);
+
+                _accumulator -= fixedStep;
+            }
+
+            _alpha = _accumulator / fixedStep;
         }
-
-        _alpha = _accumulator / fixedStep;
     }
 
     public void Draw(GameTime time)
@@ -126,7 +139,7 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
             _drawSystem.Alpha = _alpha;
             _drawSystem.Update(in time);
         }
-        
+
         _uiSystem?.Update(time);
     }
 

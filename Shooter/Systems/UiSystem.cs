@@ -1,44 +1,67 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Arch.Core;
-using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.Styles;
 using Shooter.Components;
+using Shooter.Contracts;
+using Shooter.Services;
 
 namespace Shooter.Systems;
 
-public class UiSystem(World world) : SystemBase<GameTime>(world)
+public class UiSystem(World world, GameManager gameManager) : SystemBase<GameTime>(world)
 {
-    private readonly QueryDescription _entitiesToDisplay = new QueryDescription().WithAll<Player>();
+    private readonly QueryDescription _players = new QueryDescription().WithAll<Player>();
 
     private readonly Desktop _desktop = new();
-    private Grid? _oldScoreGrid;
+    private Widget? _oldUi;
 
     public override void Update(in GameTime gameTime)
     {
-        List<Player> players = [];
+        var needToRerender = false;
+        Widget? ui = null;
 
-        var query = World.Query(in _entitiesToDisplay);
-        foreach (ref var chunk in query)
+        if (gameManager.Status == GameStatus.Playing)
         {
-            chunk.GetSpan<Player>();
+            List<Player> players = [];
 
-            foreach (var index in chunk)
+            var query = World.Query(in _players);
+            foreach (ref var chunk in query)
             {
-                var player = chunk.Get<Player>(index);
-                players.Add(player);
+                chunk.GetSpan<Player>();
+
+                foreach (var index in chunk)
+                {
+                    var player = chunk.Get<Player>(index);
+                    players.Add(player);
+                }
             }
+
+            ui = GetPlayersScoresUi(players);
+            needToRerender = true;
+        }
+        else if (gameManager.Status == GameStatus.Paused
+                 && _oldUi?.Tag is string tag 
+                 && tag != "pause menu")
+        {
+            ui = GetPauseMenuUi();
+            needToRerender = true;
         }
 
-        ReRenderPlayersScores(players);
+        if (needToRerender)
+        {
+            _desktop.Widgets.Remove(_oldUi);
+            _oldUi = ui;
+            _desktop.Widgets.Add(ui);
+        }
+
         _desktop.Render();
     }
 
-    private void ReRenderPlayersScores(List<Player> players)
+    private static Widget GetPlayersScoresUi(List<Player> players)
     {
         var grid = new Grid { Tag = "score ui" };
 
@@ -89,13 +112,82 @@ public class UiSystem(World world) : SystemBase<GameTime>(world)
             index++;
         }
 
-        if (_oldScoreGrid is not null)
-            _desktop.Widgets.Remove(_oldScoreGrid);
-
-        if (_oldScoreGrid is not null)
-            _desktop.Widgets.Remove(_oldScoreGrid);
-        _oldScoreGrid = grid;
-        
-        _desktop.Widgets.Add(grid);
+        return grid;
     }
+
+    private Widget GetPauseMenuUi()
+    {
+        //Main grid
+        var grid = new Grid { Tag = "pause menu" };
+        grid.RowsProportions.Add(new Proportion(ProportionType.Part));
+        grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
+        grid.RowsProportions.Add(new Proportion(ProportionType.Part));
+
+        //Logo
+        var logo = new Label
+        {
+            Text = "Paused",
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Font = Stylesheet.Current.Fonts["display"],
+            TextColor = new Color(255, 238, 204)
+        };
+
+        grid.Widgets.Add(logo);
+
+        //Buttons panel
+        var buttonsPanel = new VerticalStackPanel
+        {
+            Spacing = 16,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+
+        Grid.SetRow(buttonsPanel, 1);
+        grid.Widgets.Add(buttonsPanel);
+
+        //Start button
+        var startButton = new Button
+        {
+            Content = new Label
+            {
+                Text = "Continue",
+                Font = Stylesheet.Current.Fonts["normal"],
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextColor = new Color(70, 66, 94)
+            },
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        startButton.SetStyle("default");
+        startButton.Width = 226;
+        startButton.Height = 48;
+        startButton.Click += OnContinueButtonClick;
+
+        buttonsPanel.Widgets.Add(startButton);
+
+        //Exit button
+        var exitButton = new Button
+        {
+            Content = new Label
+            {
+                Text = "Exit to menu",
+                Font = Stylesheet.Current.Fonts["normal"],
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextColor = new Color(70, 66, 94)
+            },
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        exitButton.SetStyle("default");
+        exitButton.Width = 228;
+        exitButton.Height = 48;
+        exitButton.Click += OnExitToMenuButtonClick;
+
+        buttonsPanel.Widgets.Add(exitButton);
+
+        return grid;
+    }
+
+    private void OnContinueButtonClick(object? sender, EventArgs e) => gameManager.Status = GameStatus.Playing;
+    private void OnExitToMenuButtonClick(object? sender, EventArgs e) => gameManager.Status = GameStatus.End;
 }
