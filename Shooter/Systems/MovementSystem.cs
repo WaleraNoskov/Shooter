@@ -10,14 +10,14 @@ public class MovementSystem(World world, MovementManager movementManager, Physic
 {
     private readonly QueryDescription _entitiesToMove = new QueryDescription().WithAll<TargetMovement>();
 
-    public override void Update(in GameTime gameTime)
+    public override void FixedUpdate(in float gameTime)
     {
-        var moving = new Move(gameTime.ElapsedGameTime, movementManager, physicObjectManager);
+        var moving = new Move(gameTime, movementManager, physicObjectManager);
         World.InlineParallelEntityQuery<Move, TargetMovement>(in _entitiesToMove, ref moving);
     }
 
     private readonly struct Move(
-        TimeSpan elapsedTime,
+        float elapsedTime,
         MovementManager movementManager,
         PhysicObjectManager physicObjectManager)
         : IForEachWithEntity<TargetMovement>

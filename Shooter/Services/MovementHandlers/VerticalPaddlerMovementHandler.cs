@@ -7,7 +7,7 @@ namespace Shooter.Services.MovementHandlers;
 
 public class VerticalPaddlerMovementHandler : IMovementHandler
 {
-    public void Move(TimeSpan elapsedTime, ref TargetMovement targetMovement, EntityPhysicsObjects physicsObjects)
+    public void Move(float elapsedTime, ref TargetMovement targetMovement, EntityPhysicsObjects physicsObjects)
     {
         var joints = physicsObjects.GetAll<PrismaticJoint>(PhysicObjectTypes.PrismaticJoint);
         

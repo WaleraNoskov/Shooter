@@ -92,21 +92,21 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
 
     public void Update(GameTime time)
     {
-        const float fixedStep = 1f / 90;
+        const float fixedStep = 1f / 100;
         _accumulator += (float)time.ElapsedGameTime.TotalSeconds;
 
-        _userInputSystem?.Update(time);
-        _inputHandleSystem?.Update(time);
+        _userInputSystem?.FixedUpdate(fixedStep);
+        _inputHandleSystem?.FixedUpdate(fixedStep);
 
-        _ballCollisionSystem?.Update(time);
-        _collisionCleanupSystem?.Update(time);
+        _ballCollisionSystem?.FixedUpdate(fixedStep);
+        _collisionCleanupSystem?.FixedUpdate(fixedStep);
 
-        _movementSystem?.Update(time);
+        _movementSystem?.FixedUpdate(fixedStep);
 
         while (_accumulator > fixedStep)
         {
-            _physicsSystem?.Update(time);
-            _syncSystem?.Update(time);
+            _physicsSystem?.FixedUpdate(fixedStep);
+            _syncSystem?.FixedUpdate(fixedStep);
 
             _accumulator -= fixedStep;
         }

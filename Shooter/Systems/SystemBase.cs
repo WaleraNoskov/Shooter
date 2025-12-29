@@ -8,8 +8,14 @@ public abstract class SystemBase<T>
     {
         World = world;
     }
-    
+
     public World World { get; private set; }
 
-    public abstract void Update(in T gameTime);
+    public virtual void Update(in T gameTime)
+    {
+    }
+    
+    public virtual void FixedUpdate(in float gameTime)
+    {
+    }
 }

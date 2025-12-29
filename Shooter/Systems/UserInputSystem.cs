@@ -5,15 +5,11 @@ using Shooter.Components;
 
 namespace Shooter.Systems;
 
-public class UserInputSystem : SystemBase<GameTime>
+public class UserInputSystem(World world) : SystemBase<GameTime>(world)
 {
     private readonly QueryDescription _entitiesToSetInput = new QueryDescription().WithAll<UserInput>();
 
-    public UserInputSystem(World world) : base(world)
-    {
-    }
-
-    public override void Update(in GameTime gameTime)
+    public override void FixedUpdate(in float gameTime)
     {
         var settingInput = new SetInput();
         World.InlineParallelQuery<SetInput, UserInput>(in _entitiesToSetInput, ref settingInput);

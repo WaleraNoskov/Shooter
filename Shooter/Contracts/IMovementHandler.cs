@@ -5,5 +5,5 @@ namespace Shooter.Contracts;
 
 public interface IMovementHandler
 {
-    void Move(TimeSpan elapsedTime, ref TargetMovement targetMovement, EntityPhysicsObjects physicsObjects);
+    void Move(float elapsedTime, ref TargetMovement targetMovement, EntityPhysicsObjects physicsObjects);
 }

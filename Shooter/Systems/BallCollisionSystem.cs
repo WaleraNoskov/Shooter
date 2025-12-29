@@ -12,7 +12,7 @@ public class BallCollisionSystem(World world) : SystemBase<GameTime>(world)
 {
     private readonly QueryDescription _query = new QueryDescription().WithAll<Ball, Collision, TargetMovement>();
 
-    public override void Update(in GameTime gameTime)
+    public override void FixedUpdate(in float gameTime)
     {
         var collisionProcessing = new CollisionProcessing(world);
         World.InlineParallelQuery<CollisionProcessing, Ball, Collision, TargetMovement, ActualMovement>(in _query, ref collisionProcessing);

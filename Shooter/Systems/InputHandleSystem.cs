@@ -9,7 +9,7 @@ public class InputHandleSystem(World world, InputManager inputManager) : SystemB
 {
     private readonly QueryDescription _entitiesToSetMoving = new QueryDescription().WithAll<UserInput, TargetMovement>();
 
-    public override void Update(in GameTime gameTime)
+    public override void FixedUpdate(in float gameTime)
     {
         var movementSetting = new SetMovement(inputManager);
         World.InlineParallelQuery<SetMovement, UserInput, TargetMovement>(in _entitiesToSetMoving, ref movementSetting);

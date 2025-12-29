@@ -8,7 +8,7 @@ namespace Shooter.Services.MovementHandlers;
 
 public class BallMovementHandler : IMovementHandler
 {
-    public void Move(TimeSpan elapsedTime, ref TargetMovement targetMovement, EntityPhysicsObjects physicsObjects)
+    public void Move(float elapsedTime, ref TargetMovement targetMovement, EntityPhysicsObjects physicsObjects)
     {
         var body = physicsObjects.GetByTag<Body>(PhysicObjectTypes.PhysicsBody, PhysicTags.MainBody);
         if (body is null)

@@ -12,7 +12,7 @@ public class SyncSystem(World world, PhysicObjectManager physicObjectManager) : 
 {
     private readonly QueryDescription _entitiesToMove = new QueryDescription().WithAll<ActualMovement>();
 
-    public override void Update(in GameTime gameTime)
+    public override void FixedUpdate(in float gameTime)
     {
         var syncing = new Sync(physicObjectManager);
         World.InlineParallelEntityQuery<Sync, ActualMovement>(in _entitiesToMove, ref syncing);

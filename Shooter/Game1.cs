@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Myra;
 using Shooter.Contracts;
 using Shooter.GameStates;
@@ -20,6 +21,8 @@ public class Game1 : Game
             PreferredBackBufferHeight = 600, 
             SynchronizeWithVerticalRetrace = true
         };
+
+        IsFixedTimeStep = false;
         
         Content.RootDirectory = "Content";
         IsMouseVisible = true;

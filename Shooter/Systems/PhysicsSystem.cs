@@ -5,8 +5,9 @@ namespace Shooter.Systems;
 
 public class PhysicsSystem(World world, nkast.Aether.Physics2D.Dynamics.World physicWorld) : SystemBase<GameTime>(world)
 {
-    public override void Update(in GameTime gameTime)
+
+    public override void FixedUpdate(in float gameTime)
     {
-        physicWorld.Step(1 / 90f);
+        physicWorld.Step(gameTime);
     }
 }

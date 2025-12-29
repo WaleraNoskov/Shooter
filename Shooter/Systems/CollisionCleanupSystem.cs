@@ -9,13 +9,13 @@ public class CollisionCleanupSystem(World world) : SystemBase<GameTime>(world)
 {
     private readonly QueryDescription _query = new QueryDescription().WithAll<Collision>();
 
-    public override void Update(in GameTime gameTime)
+    public override void FixedUpdate(in float gameTime)
     {
-        var cleanup = new CollisionCleanup(world);
+        var cleanup = new CollisionCleanup();
         World.InlineParallelEntityQuery<CollisionCleanup, Collision>(in _query, ref cleanup);
     }
 
-    private readonly struct CollisionCleanup(World world) : IForEachWithEntity<Collision>
+    private readonly struct CollisionCleanup : IForEachWithEntity<Collision>
     {
         public void Update(Entity entity, ref Collision collision)
         {
