@@ -44,10 +44,17 @@ public class UiSystem(World world, GameManager gameManager) : SystemBase<GameTim
             needToRerender = true;
         }
         else if (gameManager.Status == GameStatus.Paused
-                 && _oldUi?.Tag is string tag 
-                 && tag != "pause menu")
+                 && _oldUi?.Tag is string pauseTag 
+                 && pauseTag != "pause menu")
         {
             ui = GetPauseMenuUi();
+            needToRerender = true;
+        }
+        else if (gameManager.Status == GameStatus.Results
+                 && _oldUi?.Tag is string resultsTag
+                 && resultsTag != "results menu")
+        {
+            ui = GetResultUiWidget();
             needToRerender = true;
         }
 
@@ -130,7 +137,7 @@ public class UiSystem(World world, GameManager gameManager) : SystemBase<GameTim
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             Font = Stylesheet.Current.Fonts["display"],
-            TextColor = new Color(255, 238, 204)
+            TextColor = new Color(70, 66, 94)
         };
 
         grid.Widgets.Add(logo);
@@ -184,6 +191,83 @@ public class UiSystem(World world, GameManager gameManager) : SystemBase<GameTim
         exitButton.Click += OnExitToMenuButtonClick;
 
         buttonsPanel.Widgets.Add(exitButton);
+
+        return grid;
+    }
+
+    private Widget GetResultUiWidget()
+    {
+        //Main grid
+        var grid = new Grid { Tag = "results menu" };
+        grid.RowsProportions.Add(new Proportion(ProportionType.Part));
+        grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
+        grid.RowsProportions.Add(new Proportion(ProportionType.Part));
+
+        //Logo
+        var logo = new Label
+        {
+            Text = "Results",
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Font = Stylesheet.Current.Fonts["display"],
+            TextColor = new Color(70, 66, 94)
+        };
+
+        grid.Widgets.Add(logo);
+
+        //Buttons panel
+        var resultsPanel = new VerticalStackPanel
+        {
+            Spacing = 16,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+
+        Grid.SetRow(resultsPanel, 1);
+        grid.Widgets.Add(resultsPanel);
+
+        //Winner panel
+        var winnerLabel = new Label
+        {
+            Text = $"Winner - Player {gameManager.WinnerPlayerIndex}",
+            Font = Stylesheet.Current.Fonts["normal"],
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            TextColor = new Color(70, 66, 94)
+        };
+        
+        resultsPanel.Widgets.Add(winnerLabel);
+        
+        //Loose panel
+        var looseLabel = new Label
+        {
+            Text = $"Looser - Player {gameManager.LoosePlayerIndex}",
+            Font = Stylesheet.Current.Fonts["normal"],
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            TextColor = new Color(70, 66, 94)
+        };
+        
+        resultsPanel.Widgets.Add(looseLabel);
+        
+        //Exit button
+        var exitButton = new Button
+        {
+            Content = new Label
+            {
+                Text = "Exit to menu",
+                Font = Stylesheet.Current.Fonts["normal"],
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextColor = new Color(70, 66, 94)
+            },
+            HorizontalAlignment = HorizontalAlignment.Center,
+        };
+        exitButton.SetStyle("default");
+        exitButton.Width = 228;
+        exitButton.Height = 48;
+        exitButton.Click += OnExitToMenuButtonClick;
+
+        resultsPanel.Widgets.Add(exitButton);
 
         return grid;
     }

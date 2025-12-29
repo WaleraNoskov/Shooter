@@ -3,10 +3,12 @@ using Arch.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Shooter.Components;
+using Shooter.Contracts;
+using Shooter.Services;
 
 namespace Shooter.Systems;
 
-public class DrawSystem(World world, SpriteBatch batch) : SystemBase<GameTime>(world)
+public class DrawSystem(World world, SpriteBatch batch, GameManager gameManager) : SystemBase<GameTime>(world)
 {
     private readonly QueryDescription _entitiesToDraw = new QueryDescription()
         .WithAll<ActualMovement, RectangleCollider, Sprite>();
@@ -19,13 +21,14 @@ public class DrawSystem(World world, SpriteBatch batch) : SystemBase<GameTime>(w
 
         batch.Begin(samplerState: SamplerState.PointWrap);
 
-        var drawing = new Draw(batch, Alpha);
+        var drawing = new Draw(batch, Alpha, gameManager);
         World.InlineParallelQuery<Draw, ActualMovement, RectangleCollider, Sprite>(_entitiesToDraw, ref drawing);
 
         batch.End();
     }
 
-    private readonly struct Draw(SpriteBatch batch, float alpha) : IForEach<ActualMovement, RectangleCollider, Sprite>
+    private readonly struct Draw(SpriteBatch batch, float alpha, GameManager gameManager)
+        : IForEach<ActualMovement, RectangleCollider, Sprite>
     {
         public void Update(ref ActualMovement actualMovement, ref RectangleCollider collider, ref Sprite sprite)
         {
@@ -61,7 +64,7 @@ public class DrawSystem(World world, SpriteBatch batch) : SystemBase<GameTime>(w
                 sprite.Texture,
                 interpolatedPosition,
                 null,
-                Color.White,
+                gameManager.Status == GameStatus.Playing ? Color.White : Color.LightGray,
                 interpolatedAngle,
                 origin,
                 scale,

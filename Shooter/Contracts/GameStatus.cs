@@ -4,5 +4,6 @@ public enum GameStatus
 {
     Playing,
     Paused,
+    Results,
     End
 }

@@ -81,7 +81,7 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
         _collisionCleanupSystem = new CollisionCleanupSystem(_world);
         _physicsSystem = new PhysicsSystem(_world, _physicsWorld);
         _syncSystem = new SyncSystem(_world, _physicObjectManager);
-        _drawSystem = new DrawSystem(_world, new SpriteBatch(graphicsDevice));
+        _drawSystem = new DrawSystem(_world, new SpriteBatch(graphicsDevice), _gameManager);
         _uiSystem = new UiSystem(_world, _gameManager);
 
         CreateLevel();
@@ -97,23 +97,27 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
     public void Update(GameTime time)
     {
         if (_gameManager.Status == GameStatus.End)
+        {
             Command = GameStateCommand.ExitToMenu;
-        else if (_gameManager.Status == GameStatus.Playing)
+            return;
+        }
+
+        if (_gameManager.Status == GameStatus.Playing)
         {
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
             {
                 _gameManager.Status = GameStatus.Paused;
                 return;
             }
-            
+
             const float fixedStep = 1f / 100;
             _accumulator += (float)time.ElapsedGameTime.TotalSeconds;
 
             _userInputSystem!.FixedUpdate(fixedStep);
             _inputHandleSystem!.FixedUpdate(fixedStep);
 
-            _ballCollisionSystem!.FixedUpdate(fixedStep);
             _playerCollisionSystem!.FixedUpdate(fixedStep);
+            _ballCollisionSystem!.FixedUpdate(fixedStep);
             _collisionCleanupSystem!.FixedUpdate(fixedStep);
 
             _movementSystem!.FixedUpdate(fixedStep);
@@ -304,6 +308,34 @@ public class PongGameState(GraphicsDevice graphicsDevice, ContentManager content
             wallBottomBody.CreateRectangle(80, 0.1f, 1, nkast.Aether.Physics2D.Common.Vector2.Zero);
         wallBottomCollider.Friction = 0;
         wallBottomCollider.Restitution = 1;
+
+        // //player 1 lose catcher
+        // var player1LoseCatcher = _world.Create(
+        //     new RectangleCollider { Width = 1f, Height = 60f, Layer = CollisionLayer.LooseCatcher },
+        //     new LooseCatcher { PlayerIndex = 1 }
+        // );
+        //
+        // var player1LooseCatcherBody = _physicsWorld.CreateBody(
+        //     new nkast.Aether.Physics2D.Common.Vector2(70, 30),
+        //     bodyType: BodyType.Static);
+        // var player1LooseCatcher = player1LooseCatcherBody.CreateRectangle(1f, 60f, 1f,
+        //     nkast.Aether.Physics2D.Common.Vector2.Zero);
+        // player1LooseCatcher.Friction = 0;
+        // player1LooseCatcher.Restitution = 0;
+        //
+        // //player 2 lose catcher
+        // var player2LoseCatcher = _world.Create(
+        //     new RectangleCollider { Width = 1f, Height = 60f, Layer = CollisionLayer.LooseCatcher },
+        //     new LooseCatcher { PlayerIndex = 2 }
+        // );
+        //
+        // var player2LooseCatcherBody = _physicsWorld.CreateBody(
+        //     new nkast.Aether.Physics2D.Common.Vector2(10, 30),
+        //     bodyType: BodyType.Static);
+        // var player2LooseCatcher = player2LooseCatcherBody.CreateRectangle(1f, 60f, 1f,
+        //     nkast.Aether.Physics2D.Common.Vector2.Zero);
+        // player2LooseCatcher.Friction = 0;
+        // player2LooseCatcher.Restitution = 0;
 
         //physics events
         _physicsWorld.ContactManager.BeginContact += contact =>

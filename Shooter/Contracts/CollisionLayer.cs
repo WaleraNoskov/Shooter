@@ -5,5 +5,6 @@ public enum CollisionLayer
     Unknown,
     Player,
     Ball,
-    Wall
+    Wall,
+    LooseCatcher
 }
